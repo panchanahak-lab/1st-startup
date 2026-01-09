@@ -1,0 +1,132 @@
+
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Build an ATS-optimized resume, scan your CV against job descriptions, and practice with AI interviews. Get hired faster with NextStep Resume." />
+    <meta name="keywords" content="Resume Builder, ATS Checker, AI Interview Prep, Career Tools, CV Maker, Job Tracker" />
+    <meta name="author" content="NextStep Resume" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://nextstepresume.ai/" />
+    <meta property="og:title" content="NextStep Resume | AI-Powered Career Toolkit" />
+    <meta property="og:description" content="Free ATS-friendly resume builder, resume scanner, and live AI interview practice. Take the next step in your career." />
+    <meta property="og:image" content="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=1200" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:title" content="NextStep Resume | AI-Powered Career Toolkit" />
+    <meta property="twitter:description" content="Free ATS-friendly resume builder, resume scanner, and live AI interview practice." />
+    <meta property="twitter:image" content="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&q=80&w=1200" />
+
+    <title>NextStep Resume | ATS-Optimized Professional Resumes</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              navy: {
+                900: '#0F172A',
+                800: '#1E293B',
+              },
+              brand: {
+                50:  '#f0f8ff',
+                100: '#e0f2fe', 
+                200: '#bae6fd',
+                300: '#7dd3fc',
+                400: '#38bdf8',
+                500: '#00649E',
+                600: '#005282',
+              },
+              whatsapp: '#25D366',
+            },
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              heading: ['Poppins', 'sans-serif'],
+            },
+          },
+        },
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+      @media print {
+        /* Hide everything by default */
+        body * { 
+          visibility: hidden !important; 
+        }
+        
+        /* Show only the specifically marked printable containers */
+        .printable-content, 
+        .printable-content * { 
+          visibility: visible !important; 
+        }
+
+        /* Reset the printable container to the top-left */
+        .printable-content {
+          position: fixed !important;
+          left: 0 !important;
+          top: 0 !important;
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          transform: scale(1) !important; /* Important: Disable mobile browser scaling during print */
+          background: white !important;
+          z-index: 99999 !important;
+        }
+
+        /* Prevent page breaks inside critical elements */
+        .no-break {
+          page-break-inside: avoid;
+        }
+
+        /* Ensure backgrounds print */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+
+        /* Hide specific elements within the printable area that shouldn't be in PDF */
+        .print-hide {
+          display: none !important;
+        }
+      }
+      
+      /* Smooth transitions and scrollbars */
+      .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #888; border-radius: 10px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #555; }
+    </style>
+
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "@google/genai": "https://esm.sh/@google/genai",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/"
+  }
+}
+</script>
+</head>
+  <body class="font-sans text-slate-700 antialiased bg-slate-50">
+    <div id="root"></div>
+    <script type="module" src="./index.tsx"></script>
+  </body>
+</html>
