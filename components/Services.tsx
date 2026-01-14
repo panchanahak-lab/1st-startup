@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { ServiceItem } from '../types';
 
 const services: ServiceItem[] = [
@@ -21,6 +20,23 @@ const services: ServiceItem[] = [
 ];
 
 const Services: React.FC = () => {
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+    e.preventDefault();
+    const element = document.getElementById(id);
+    if (element) {
+      const offset = 80; // Height of fixed navbar
+      const bodyRect = document.body.getBoundingClientRect().top;
+      const elementRect = element.getBoundingClientRect().top;
+      const elementPosition = elementRect - bodyRect;
+      const offsetPosition = elementPosition - offset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   return (
     <section id="services" className="py-24 bg-slate-50 border-t border-slate-200 scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -41,9 +57,32 @@ const Services: React.FC = () => {
               </div>
               <h3 className="font-heading text-xl font-bold text-navy-900 mb-4">{service.title}</h3>
               <p className="text-slate-600 leading-relaxed mb-6">{service.description}</p>
-              <a href="#interview" className="text-navy-900 font-semibold text-sm flex items-center group-hover:text-brand-500 transition-colors">
-                Practice for Interview <i className="fas fa-arrow-right ml-2 text-xs"></i>
-              </a>
+              
+              {service.title === 'LinkedIn Optimization' ? (
+                <a 
+                  href="#linkedin-optimizer" 
+                  onClick={(e) => handleNavClick(e, 'linkedin-optimizer')}
+                  className="text-[#0A66C2] font-semibold text-sm flex items-center hover:opacity-80 transition-opacity"
+                >
+                  Optimize My Profile <i className="fas fa-magic ml-2 text-xs"></i>
+                </a>
+              ) : service.title === 'Cover Letter Drafting' ? (
+                <a 
+                  href="#builder" 
+                  onClick={(e) => handleNavClick(e, 'builder')}
+                  className="text-navy-900 font-semibold text-sm flex items-center group-hover:text-brand-500 transition-colors"
+                >
+                  Draft Cover Letter <i className="fas fa-arrow-right ml-2 text-xs"></i>
+                </a>
+              ) : (
+                <a 
+                  href="#builder" 
+                  onClick={(e) => handleNavClick(e, 'builder')}
+                  className="text-navy-900 font-semibold text-sm flex items-center group-hover:text-brand-500 transition-colors"
+                >
+                  Start Building <i className="fas fa-arrow-right ml-2 text-xs"></i>
+                </a>
+              )}
             </div>
           ))}
         </div>

@@ -1,4 +1,3 @@
-
 export interface PricingTier {
   name: string;
   price: string;
@@ -25,14 +24,14 @@ export interface TrustIndicator {
   description: string;
 }
 
+// Fix: Added missing JobStatus type used in JobTracker.tsx
 export type JobStatus = 'Saved' | 'Applied' | 'Interviewing' | 'Offer';
 
+// Fix: Added missing JobApplication interface used in JobTracker.tsx
 export interface JobApplication {
   id: string;
   company: string;
   role: string;
   status: JobStatus;
   dateAdded: string;
-  notes?: string;
-  salary?: string;
 }

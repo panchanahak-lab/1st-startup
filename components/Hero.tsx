@@ -2,120 +2,79 @@
 import React from 'react';
 
 const Hero: React.FC = () => {
-  const scrollToBuilder = () => {
-    const builderSection = document.getElementById('builder');
-    if (builderSection) {
-      builderSection.scrollIntoView({ behavior: 'smooth' });
-    }
+  const scrollToId = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const startTour = () => {
+    window.dispatchEvent(new CustomEvent('start-nextstep-tour'));
   };
 
   return (
-    <section className="relative pt-28 pb-16 lg:pt-40 lg:pb-28 bg-gradient-to-br from-slate-50 to-slate-100 overflow-hidden">
+    <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 lg:pt-60 lg:pb-48 overflow-hidden">
+      {/* Dynamic Aura Orbs */}
+      <div className="aura-orb bg-brand-500 top-[-10%] right-[-10%] md:top-[-20%] md:right-[-10%] animate-aura"></div>
+      <div className="aura-orb bg-accent-purple bottom-[-10%] left-[-10%] md:bottom-[-20%] md:left-[-10%] animate-aura" style={{ animationDelay: '-5s' }}></div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+        <div className="flex flex-col items-center text-center">
           
-          {/* Text Content */}
-          <div className="text-center lg:text-left">
-            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold text-navy-900 leading-tight mb-6">
-              Your <span className="text-brand-500">Next</span> <span className="text-brand-500">Step</span> Starts With the <span className="text-brand-500 relative">
-                Right Resume
-              </span>
-            </h1>
-            <p className="text-lg sm:text-xl text-slate-600 mb-8 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-              ATS-optimized resumes tailored to your job role — not generic templates. Get hired faster with a CV designed to impress both bots and humans.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <button 
-                onClick={scrollToBuilder}
-                className="bg-brand-500 hover:bg-brand-600 text-white font-bold text-lg px-8 py-4 rounded-xl shadow-lg shadow-brand-500/30 transition-all duration-300 transform hover:-translate-y-1"
-              >
-                Get Your Resume Now <i className="fas fa-arrow-right ml-2 text-sm"></i>
-              </button>
-              <button className="bg-white hover:bg-slate-50 text-navy-900 font-semibold text-lg px-8 py-4 rounded-xl shadow-md border border-slate-200 transition-all duration-300">
-                View Samples
-              </button>
-            </div>
-            <div className="mt-8 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 text-sm text-slate-500 font-medium">
-              <span className="flex items-center"><i className="fas fa-check-circle text-brand-500 mr-2"></i> 24h Turnaround</span>
-              <span className="flex items-center"><i className="fas fa-check-circle text-brand-500 mr-2"></i> Satisfaction Guaranteed</span>
-            </div>
+          <div id="hero-badge" className="animate-reveal inline-flex items-center gap-2 bg-white/10 dark:bg-white/5 border border-white/20 px-4 py-2 md:px-6 md:py-2 rounded-full mb-8 md:mb-12 shadow-xl backdrop-blur-md">
+            <span className="flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-brand-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
+            </span>
+            <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] text-navy-900 dark:text-brand-400">
+              Intelligence-Driven Career Suite
+            </span>
+          </div>
+          
+          <h1 className="animate-reveal [animation-delay:100ms] text-5xl sm:text-7xl md:text-8xl lg:text-[10rem] font-black text-navy-900 dark:text-white leading-[1] md:leading-[0.85] tracking-[-0.05em] mb-8 md:mb-12 max-w-6xl">
+            Land The <br className="hidden sm:block"/> <span className="text-gradient">Dream Offer.</span>
+          </h1>
+          
+          <p className="animate-reveal [animation-delay:200ms] text-lg md:text-xl lg:text-2xl text-slate-500 dark:text-slate-400 max-w-2xl mb-12 md:mb-16 leading-relaxed font-medium px-4">
+            AI-powered resume optimization, real-time interview simulations, and high-impact LinkedIn branding—engineered for 1% results.
+          </p>
+          
+          <div className="animate-reveal [animation-delay:300ms] flex flex-col sm:flex-row gap-4 md:gap-6 items-center w-full sm:w-auto px-6 sm:px-0">
+            <button 
+              onClick={() => scrollToId('ats-checker')}
+              className="w-full sm:w-auto btn-premium group bg-navy-900 dark:bg-brand-500 text-white font-black text-lg md:text-xl px-8 md:px-12 py-5 md:py-6 rounded-2xl md:rounded-[2.5rem] flex items-center justify-center gap-4 shadow-2xl"
+            >
+              Scan Your CV
+              <i className="fas fa-arrow-right group-hover:translate-x-2 transition-transform"></i>
+            </button>
+            <button 
+              onClick={() => scrollToId('builder')}
+              className="w-full sm:w-auto glass-premium dark:bg-white/5 text-navy-900 dark:text-white font-bold text-lg md:text-xl px-8 md:px-12 py-5 md:py-6 rounded-2xl md:rounded-[2.5rem] border border-slate-200 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10 transition-all shadow-xl"
+            >
+              Launch Builder
+            </button>
           </div>
 
-          {/* Visual: CSS Resume Mockup */}
-          <div className="relative mx-auto w-full max-w-md lg:max-w-full perspective-1000 mt-8 lg:mt-0">
-            {/* Decorative background blobs */}
-            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 bg-brand-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob"></div>
-            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-72 h-72 bg-blue-100 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000"></div>
+          <button 
+            onClick={startTour}
+            className="mt-10 md:mt-12 animate-reveal [animation-delay:400ms] text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-slate-400 hover:text-brand-500 transition-colors flex items-center gap-3"
+          >
+            <i className="fas fa-play-circle text-lg"></i> Take a Feature Tour
+          </button>
 
-            {/* Resume Card */}
-            <div className="relative bg-white rounded-lg shadow-2xl p-6 sm:p-8 transform transition-all duration-700 ease-out border border-slate-100 md:rotate-y-6 md:rotate-x-6 hover:rotate-0">
-              {/* Resume Header */}
-              <div className="flex items-center space-x-4 mb-8 border-b border-slate-100 pb-6">
-                <div className="w-16 h-16 bg-slate-200 rounded-full flex-shrink-0 animate-pulse"></div>
-                <div className="flex-1 space-y-2">
-                  <div className="h-6 bg-navy-900 rounded w-3/4"></div>
-                  <div className="h-4 bg-brand-500 rounded w-1/2"></div>
+          <div className="mt-16 md:mt-24 flex flex-col md:flex-row items-center gap-6 md:gap-8 animate-reveal [animation-delay:500ms]">
+            <div className="flex -space-x-3 md:-space-x-4">
+              {[12, 14, 16, 18].map(i => (
+                <div key={i} className="w-10 h-10 md:w-14 md:h-14 rounded-full border-2 md:border-4 border-white dark:border-navy-950 bg-slate-200 overflow-hidden shadow-xl">
+                  <img src={`https://i.pravatar.cc/100?img=${i}`} alt="Success User" className="w-full h-full object-cover" />
                 </div>
+              ))}
+              <div className="w-10 h-10 md:w-14 md:h-14 rounded-full border-2 md:border-4 border-white dark:border-navy-950 bg-brand-500 flex items-center justify-center text-white text-[10px] md:text-xs font-black shadow-xl">
+                +15k
               </div>
-              
-              {/* Resume Body */}
-              <div className="space-y-6">
-                {/* Experience Section */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-400">
-                      <i className="fas fa-briefcase text-xs"></i>
-                    </div>
-                    <div className="h-5 bg-slate-800 rounded w-1/3"></div>
-                  </div>
-                  <div className="pl-10 space-y-2">
-                    <div className="h-3 bg-slate-200 rounded w-full"></div>
-                    <div className="h-3 bg-slate-200 rounded w-5/6"></div>
-                    <div className="h-3 bg-slate-200 rounded w-4/5"></div>
-                  </div>
-                </div>
-
-                 {/* Education Section */}
-                 <div className="space-y-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-400">
-                      <i className="fas fa-graduation-cap text-xs"></i>
-                    </div>
-                    <div className="h-5 bg-slate-800 rounded w-1/4"></div>
-                  </div>
-                  <div className="pl-10 space-y-2">
-                    <div className="h-3 bg-slate-200 rounded w-full"></div>
-                    <div className="h-3 bg-slate-200 rounded w-2/3"></div>
-                  </div>
-                </div>
-
-                {/* Skills Section */}
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-400">
-                      <i className="fas fa-bolt text-xs"></i>
-                    </div>
-                     <div className="h-5 bg-slate-800 rounded w-1/4"></div>
-                  </div>
-                   <div className="pl-10 flex flex-wrap gap-2">
-                    <div className="h-6 bg-brand-100 rounded-full w-16"></div>
-                    <div className="h-6 bg-brand-100 rounded-full w-20"></div>
-                    <div className="h-6 bg-brand-100 rounded-full w-14"></div>
-                    <div className="h-6 bg-brand-100 rounded-full w-24"></div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Hired Badge */}
-              <div className="absolute -right-6 -bottom-6 bg-white p-4 rounded-xl shadow-xl border border-slate-100 flex items-center gap-3 animate-bounce-slow z-20">
-                 <div className="bg-brand-100 text-brand-500 w-10 h-10 rounded-full flex items-center justify-center">
-                    <i className="fas fa-check text-lg"></i>
-                 </div>
-                 <div>
-                    <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Status</p>
-                    <p className="font-bold text-navy-900">Hired!</p>
-                 </div>
-              </div>
+            </div>
+            <div className="text-center md:text-left">
+              <p className="text-sm font-black text-navy-900 dark:text-white tracking-tight leading-none mb-1">Elite Professionals</p>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Trust NextStep Every Day</p>
             </div>
           </div>
         </div>
