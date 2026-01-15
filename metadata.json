@@ -1,7 +1,5 @@
 {
   "name": "NextStep Resume",
   "description": "A high-conversion landing page for a premium resume writing service, focused on ATS optimization and career growth.",
-  "requestFramePermissions": [
-    "microphone"
-  ]
+  "requestFramePermissions": []
 }
