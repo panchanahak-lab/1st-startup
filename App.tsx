@@ -16,6 +16,7 @@ import LinkedInOptimizer from './components/LinkedInOptimizer';
 import ChatBot from './components/ChatBot';
 import Tour from './components/Tour';
 import DesktopRecommendation from './components/DesktopRecommendation';
+import CookieConsent from './components/CookieConsent';
 
 function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -85,6 +86,7 @@ function App() {
         <BottomCTA />
       </main>
       <DesktopRecommendation />
+      <CookieConsent />
       <ChatBot />
       <Footer />
       <AuthModal 
