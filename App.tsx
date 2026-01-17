@@ -17,6 +17,7 @@ import ChatBot from './components/ChatBot';
 import Tour from './components/Tour';
 import DesktopRecommendation from './components/DesktopRecommendation';
 import CookieConsent from './components/CookieConsent';
+import BackToTop from './components/BackToTop';
 
 function App() {
   const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -88,6 +89,7 @@ function App() {
       <DesktopRecommendation />
       <CookieConsent />
       <ChatBot />
+      <BackToTop />
       <Footer />
       <AuthModal 
         isOpen={isAuthOpen} 
