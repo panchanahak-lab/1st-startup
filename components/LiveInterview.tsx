@@ -70,7 +70,34 @@ interface InterviewFeedback {
 }
 
 const LANGUAGES = [
-  'English', 'Spanish', 'French', 'German', 'Hindi', 'Japanese', 'Mandarin'
+  'English', 
+  'Hindi', 
+  'Bengali', 
+  'Telugu', 
+  'Marathi', 
+  'Tamil', 
+  'Urdu', 
+  'Gujarati', 
+  'Kannada', 
+  'Malayalam', 
+  'Odia', 
+  'Punjabi', 
+  'Assamese', 
+  'Maithili', 
+  'Santali', 
+  'Kashmiri', 
+  'Nepali', 
+  'Konkani', 
+  'Sindhi', 
+  'Dogri', 
+  'Manipuri', 
+  'Bodo', 
+  'Sanskrit',
+  'Spanish', 
+  'French', 
+  'German', 
+  'Japanese', 
+  'Mandarin'
 ];
 
 const PERSONAS = {

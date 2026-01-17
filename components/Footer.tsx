@@ -13,10 +13,10 @@ const Footer: React.FC = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="mb-4 md:mb-0 text-center md:text-left">
             <span className="font-heading font-bold text-xl tracking-tight">
-              <span className="text-brand-500">Ramya</span>
-              <span className="text-navy-900 dark:text-white ml-1">PDF</span>
+              <span className="text-brand-500">NextStep</span>
+              <span className="text-navy-900 dark:text-white ml-1">Resume</span>
             </span>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">© {new Date().getFullYear()} Ramya PDF. All rights reserved.</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">© {new Date().getFullYear()} NextStep Resume. All rights reserved.</p>
             <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-1 uppercase tracking-widest font-bold">Made in Odisha, India</p>
           </div>
           

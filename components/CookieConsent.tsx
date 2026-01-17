@@ -10,7 +10,7 @@ interface ConsentState {
   advertising: boolean;
 }
 
-const STORAGE_KEY = 'ramya_cookie_consent';
+const STORAGE_KEY = 'nextstep_cookie_consent'; // Updated key
 const EXPIRY_DAYS = 180;
 
 const CookieConsent: React.FC = () => {
@@ -62,9 +62,9 @@ const CookieConsent: React.FC = () => {
     // CONDITIONAL LOADING: Google Analytics
     if (preferences.analytics) {
       // Check if GA is already loaded to prevent duplicates
-      if (!document.getElementById('ramya-ga-script')) {
+      if (!document.getElementById('nextstep-ga-script')) {
         const script1 = document.createElement('script');
-        script1.id = 'ramya-ga-script';
+        script1.id = 'nextstep-ga-script';
         script1.async = true;
         // Replace G-XXXXXXXXXX with your actual Measurement ID
         script1.src = `https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX`; 
@@ -79,7 +79,7 @@ const CookieConsent: React.FC = () => {
         
         document.head.appendChild(script1);
         document.head.appendChild(script2);
-        console.log("Ramya PDF: Analytics initialized.");
+        console.log("NextStep Resume: Analytics initialized.");
       }
     }
     
@@ -144,7 +144,7 @@ const CookieConsent: React.FC = () => {
                   <h3 className="text-lg font-bold text-navy-900 dark:text-white">Privacy & Transparency</h3>
                 </div>
                 <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
-                  At <strong>Ramya PDF</strong>, we value your privacy. We use cookies to secure your sessions and, with your permission, to analyze traffic to improve our PDF tools. We comply with the <span className="text-navy-900 dark:text-slate-100 font-bold">DPDP Act, 2023</span>.
+                  At <strong>NextStep Resume</strong>, we value your privacy. We use cookies to secure your sessions and, with your permission, to analyze traffic to improve our tools. We comply with the <span className="text-navy-900 dark:text-slate-100 font-bold">DPDP Act, 2023</span>.
                 </p>
                 <div className="mt-2">
                   <a href="/privacy" className="text-xs font-bold text-brand-500 hover:text-brand-600 underline decoration-brand-500/30 underline-offset-4">Read our Privacy Policy</a>
@@ -186,7 +186,7 @@ const CookieConsent: React.FC = () => {
             <div className="p-6 md:p-8 border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-navy-950 flex justify-between items-center shrink-0">
               <div>
                 <h2 className="text-2xl font-black text-navy-900 dark:text-white tracking-tight">Cookie Preferences</h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">Ramya PDF • Odisha, India</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest mt-1">NextStep Resume • Odisha, India</p>
               </div>
               <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-full bg-slate-200 dark:bg-white/5 flex items-center justify-center text-slate-500 hover:text-red-500 transition-colors">
                 <i className="fas fa-times"></i>
@@ -196,7 +196,7 @@ const CookieConsent: React.FC = () => {
             {/* Content */}
             <div className="overflow-y-auto p-6 md:p-8 space-y-6 custom-scrollbar">
               <p className="text-sm text-slate-600 dark:text-slate-300 mb-6">
-                Customize your consent settings. Essential cookies are required for the application to function (e.g., login sessions), while others help us improve Ramya PDF.
+                Customize your consent settings. Essential cookies are required for the application to function (e.g., login sessions), while others help us improve NextStep Resume.
               </p>
 
               {/* Essential */}
@@ -229,7 +229,7 @@ const CookieConsent: React.FC = () => {
                     </label>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Helps us understand how you use the PDF tools (via Google Analytics) so we can improve performance and features. Data is anonymized.
+                    Helps us understand how you use the tools (via Google Analytics) so we can improve performance and features. Data is anonymized.
                   </p>
                 </div>
               </div>
@@ -267,7 +267,7 @@ const CookieConsent: React.FC = () => {
                     </label>
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Allows us to show relevant offers for Ramya PDF Premium. We do not sell your data to third-party data brokers.
+                    Allows us to show relevant offers for NextStep Resume Premium. We do not sell your data to third-party data brokers.
                   </p>
                 </div>
               </div>

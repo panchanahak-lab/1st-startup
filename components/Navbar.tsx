@@ -37,12 +37,12 @@ const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme, onOpenAuth }) => 
             className="flex-shrink-0 flex items-center cursor-pointer group" 
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           >
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-brand-500 rounded-lg md:rounded-xl flex items-center justify-center mr-2 md:mr-3 shadow-lg shadow-brand-500/30 group-hover:rotate-12 transition-transform">
-               <i className="fas fa-rocket text-white text-sm md:text-base"></i>
+            <div className="w-7 h-7 md:w-9 md:h-9 bg-brand-500 rounded-lg md:rounded-xl flex items-center justify-center mr-2 md:mr-3 shadow-lg shadow-brand-500/30 group-hover:rotate-12 transition-transform">
+               <i className="fas fa-briefcase text-white text-xs md:text-sm"></i>
             </div>
-            <span className="font-bold text-xl md:text-2xl tracking-tighter">
-              <span className="text-brand-500">Next</span>
-              <span className="text-navy-900 dark:text-white">Step</span>
+            <span className="font-bold text-lg md:text-xl tracking-tighter">
+              <span className="text-brand-500">NextStep</span>
+              <span className="text-navy-900 dark:text-white ml-1">Resume</span>
             </span>
           </div>
 
