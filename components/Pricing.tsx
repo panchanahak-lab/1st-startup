@@ -1,45 +1,5 @@
 
 import React from 'react';
-import { PricingTier } from '../types';
-
-const tiers: PricingTier[] = [
-  {
-    name: 'Fresher',
-    price: '₹199',
-    features: [
-      'ATS-Compliant Structure',
-      'Professional Formatting', 
-      'Keyword-Optimized Content',
-      'Academic Project Highlights',
-      '1 revisions'
-    ],
-    isPopular: false,
-  },
-  {
-    name: 'Professional',
-    price: '₹499',
-    features: [
-      'Advanced ATS Optimization',
-      'Custom Cover Letter Drafting',
-      'Editable Source Files (Docx/PDF)',
-      'Industry-Specific Action Verbs',
-      '3 revisions'
-    ],
-    isPopular: true,
-  },
-  {
-    name: 'Premium',
-    price: '₹999',
-    features: [
-      'All Professional Features',
-      'Full LinkedIn Profile Makeover',
-      'Role-Specific Competency Mapping',
-      'Priority Support (24h TAT)',
-      '7 revisions'
-    ],
-    isPopular: false,
-  },
-];
 
 const Pricing: React.FC = () => {
   return (
@@ -49,54 +9,48 @@ const Pricing: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="text-center mb-16">
-           <h2 className="font-heading text-3xl md:text-4xl font-bold text-navy-900 mb-4">Invest in Your Career</h2>
-           <p className="text-slate-600">Transparent pricing. No hidden fees. 10x ROI on your first paycheck.</p>
+           <h2 className="font-heading text-3xl md:text-5xl font-bold text-navy-900 mb-6">Professional Growth Should Be Free.</h2>
+           <p className="text-slate-600 text-lg max-w-2xl mx-auto">We believe access to career preparation is a fundamental right, not a premium feature. No credit cards. No hidden fees.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-5xl mx-auto">
-          {tiers.map((tier, index) => (
-            <div 
-              key={index} 
-              className={`relative bg-white rounded-2xl p-8 border transition-all duration-300 ${
-                tier.isPopular 
-                  ? 'border-brand-500 shadow-2xl md:scale-105 z-10' 
-                  : 'border-slate-200 shadow-lg hover:border-brand-200'
-              }`}
-            >
-              {tier.isPopular && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-brand-500 text-white px-4 py-1 rounded-full text-xs font-bold uppercase tracking-wide shadow-md whitespace-nowrap">
-                  Most Popular
-                </div>
-              )}
-              
-              <div className="text-center mb-8">
-                <h3 className="text-lg font-semibold text-slate-600 mb-2">{tier.name}</h3>
-                <div className="flex items-baseline justify-center">
-                  {tier.name === 'Fresher' && <span className="text-slate-500 text-sm mr-1 font-medium">starting @</span>}
-                  <span className="text-4xl font-bold text-navy-900 tracking-tight">{tier.price}</span>
-                </div>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                {tier.features.map((feature, fIndex) => (
-                  <li key={fIndex} className="flex items-start">
-                    <i className={`fas fa-check-circle mt-1 mr-3 ${tier.isPopular ? 'text-brand-500' : 'text-slate-400'}`}></i>
-                    <span className="text-slate-600 text-sm font-medium">{feature}</span>
-                  </li>
-                ))}
-              </ul>
-
+        <div className="max-w-4xl mx-auto bg-navy-900 rounded-[3rem] p-8 md:p-16 relative overflow-hidden shadow-2xl">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-brand-500 rounded-full blur-[100px] opacity-20 -mr-20 -mt-20"></div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
+            <div className="flex-1 text-center md:text-left">
+              <span className="text-brand-400 font-black uppercase tracking-[0.2em] text-sm mb-4 block">The Forever Promise</span>
+              <h3 className="text-4xl md:text-6xl font-black text-white mb-6">₹0 <span className="text-2xl font-bold text-slate-400">/ forever</span></h3>
+              <p className="text-slate-300 leading-relaxed mb-8">
+                Practice as many interviews as you need. Generate unlimited resume audits. We are committed to helping Indian job seekers land their dream roles without financial barriers.
+              </p>
               <button 
-                className={`w-full py-3 px-4 rounded-lg font-bold transition-all duration-300 ${
-                  tier.isPopular
-                    ? 'bg-navy-900 hover:bg-slate-800 text-white shadow-lg hover:shadow-xl'
-                    : 'bg-slate-100 hover:bg-slate-200 text-navy-900'
-                }`}
+                onClick={() => document.getElementById('interview')?.scrollIntoView({ behavior: 'smooth' })}
+                className="bg-brand-500 hover:bg-brand-600 text-white font-bold px-8 py-4 rounded-xl shadow-lg transition-all transform hover:scale-105"
               >
-                Choose {tier.name}
+                Start Practicing Now
               </button>
             </div>
-          ))}
+
+            <div className="flex-1 w-full bg-white/5 border border-white/10 rounded-3xl p-8">
+               <ul className="space-y-4">
+                 {[
+                   "Unlimited AI Interview Sessions",
+                   "Support for Hindi, Tamil, Telugu & more",
+                   "Unlimited Resume Parsing",
+                   "Real-time Feedback Reports",
+                   "ATS Compliance Checks",
+                   "No Login Required for Basic Tools"
+                 ].map((feature, i) => (
+                   <li key={i} className="flex items-center gap-4 text-white font-medium">
+                     <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center text-green-400 shrink-0">
+                       <i className="fas fa-check text-xs"></i>
+                     </div>
+                     {feature}
+                   </li>
+                 ))}
+               </ul>
+            </div>
+          </div>
         </div>
       </div>
     </section>
