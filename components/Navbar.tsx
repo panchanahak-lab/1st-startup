@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface NavbarProps {
   theme: 'light' | 'dark';
@@ -9,6 +9,27 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme, onOpenAuth }) => {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Close menu when resizing to desktop to prevent layout issues
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Prevent body scroll when menu is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [isOpen]);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
@@ -29,7 +50,7 @@ const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme, onOpenAuth }) => 
   };
 
   return (
-    <nav className="fixed w-full z-[60] glass border-b border-slate-200/50 dark:border-white/5 shadow-sm transition-all duration-300">
+    <nav className="fixed w-full z-[60] bg-white/90 dark:bg-navy-950/90 backdrop-blur-md border-b border-slate-200 dark:border-white/5 shadow-sm transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
@@ -90,54 +111,78 @@ const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme, onOpenAuth }) => 
           <div className="md:hidden flex items-center gap-3">
             <button 
               onClick={onToggleTheme} 
-              className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-sm"
+              className="w-9 h-9 rounded-full flex items-center justify-center bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 text-sm focus:ring-2 focus:ring-brand-500 outline-none transition-all"
               aria-label="Toggle Theme"
             >
                {theme === 'light' ? <i className="fas fa-moon"></i> : <i className="fas fa-sun"></i>}
             </button>
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-slate-600 dark:text-slate-300 focus:outline-none p-2 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-white/5"
-              aria-label="Toggle Menu"
+              className="text-slate-600 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500 p-2 w-10 h-10 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-white/5 transition-all"
+              aria-label={isOpen ? "Close Menu" : "Open Menu"}
+              aria-expanded={isOpen}
             >
-              <i className={`fas ${isOpen ? 'fa-times' : 'fa-bars'} text-xl`}></i>
+              <i className={`fas ${isOpen ? 'fa-times' : 'fa-bars'} text-xl transition-transform duration-300 ${isOpen ? 'rotate-90' : ''}`}></i>
             </button>
           </div>
         </div>
       </div>
 
       {/* Mobile Menu Overlay */}
-      <div className={`md:hidden fixed inset-0 z-[-1] transition-all duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-        <div className="absolute inset-0 bg-navy-900/60 backdrop-blur-sm" onClick={() => setIsOpen(false)}></div>
-        <div className={`absolute top-0 right-0 h-screen w-[280px] bg-white dark:bg-navy-950 shadow-2xl transition-transform duration-500 transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-           <div className="p-6 pt-24 space-y-6">
-              <a href="#about" onClick={(e) => handleNavClick(e, 'about')} className="flex items-center gap-4 py-3 text-lg font-bold text-slate-700 dark:text-slate-200 hover:text-brand-500 transition-colors">
-                <i className="fas fa-circle-info w-6 text-brand-500"></i> About
-              </a>
-              <a href="#ats-checker" onClick={(e) => handleNavClick(e, 'ats-checker')} className="flex items-center gap-4 py-3 text-lg font-bold text-slate-700 dark:text-slate-200 hover:text-brand-500 transition-colors">
-                <i className="fas fa-magnifying-glass-chart w-6 text-brand-500"></i> Scanner
-              </a>
-              <a href="#builder" onClick={(e) => handleNavClick(e, 'builder')} className="flex items-center gap-4 py-3 text-lg font-bold text-slate-700 dark:text-slate-200 hover:text-brand-500 transition-colors">
-                <i className="fas fa-file-invoice w-6 text-brand-500"></i> Builder
-              </a>
-              <a href="#interview" onClick={(e) => handleNavClick(e, 'interview')} className="flex items-center gap-4 py-3 text-lg font-bold text-brand-500 transition-colors">
-                <i className="fas fa-microphone-lines w-6"></i> Interview Prep
-              </a>
-              
-              <div className="pt-8 border-t border-slate-100 dark:border-white/5 space-y-4">
-                 <button 
-                  onClick={() => { onOpenAuth('signin'); setIsOpen(false); }} 
-                  className="w-full py-4 rounded-xl font-bold border border-slate-200 dark:border-white/10 dark:text-white"
-                 >
-                  Login
-                 </button>
-                 <button 
-                  onClick={() => { onOpenAuth('signup'); setIsOpen(false); }} 
-                  className="w-full py-4 bg-brand-500 text-white rounded-xl font-bold shadow-lg"
-                 >
-                  Get Started
-                 </button>
-              </div>
+      <div 
+        className={`md:hidden fixed inset-0 z-[-1] transition-all duration-500 ${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}
+        aria-hidden={!isOpen}
+      >
+        <div 
+            className={`absolute inset-0 bg-navy-900/60 backdrop-blur-sm transition-opacity duration-500 ${isOpen ? 'opacity-100' : 'opacity-0'}`} 
+            onClick={() => setIsOpen(false)}
+        ></div>
+        
+        <div 
+            className={`absolute top-0 right-0 h-screen w-[85%] max-w-[300px] bg-white dark:bg-navy-950 shadow-2xl transition-transform duration-500 cubic-bezier(0.34, 1.56, 0.64, 1) transform ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}
+        >
+           <div className="flex flex-col h-full">
+               <div className="p-6 pt-24 space-y-2 flex-grow overflow-y-auto">
+                  {/* Menu Items with staggered animation */}
+                  {[
+                    { id: 'about', icon: 'fa-circle-info', label: 'About' },
+                    { id: 'ats-checker', icon: 'fa-magnifying-glass-chart', label: 'Scanner' },
+                    { id: 'builder', icon: 'fa-file-invoice', label: 'Builder' },
+                    { id: 'interview', icon: 'fa-microphone-lines', label: 'Interview Prep', highlight: true }
+                  ].map((item, idx) => (
+                      <a 
+                        key={item.id}
+                        href={`#${item.id}`} 
+                        onClick={(e) => handleNavClick(e, item.id)} 
+                        className={`flex items-center gap-4 py-4 px-4 rounded-xl text-lg font-bold transition-all duration-300 transform ${
+                            isOpen ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
+                        } ${item.highlight ? 'text-brand-500 bg-brand-500/5' : 'text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/5 hover:text-brand-500'}`}
+                        style={{ transitionDelay: `${100 + idx * 50}ms` }}
+                      >
+                        <i className={`fas ${item.icon} w-8 text-center ${item.highlight ? 'text-brand-500' : 'text-slate-400 group-hover:text-brand-500'}`}></i> 
+                        {item.label}
+                      </a>
+                  ))}
+               </div>
+
+               <div className="p-6 border-t border-slate-100 dark:border-white/5 space-y-4 bg-slate-50/50 dark:bg-navy-900/50">
+                   <button 
+                    onClick={() => { onOpenAuth('signin'); setIsOpen(false); }} 
+                    className="w-full py-4 rounded-xl font-bold border border-slate-200 dark:border-white/10 text-navy-900 dark:text-white hover:bg-white dark:hover:bg-white/5 transition-colors"
+                   >
+                    Login
+                   </button>
+                   <button 
+                    onClick={() => { onOpenAuth('signup'); setIsOpen(false); }} 
+                    className="w-full py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-500/25 transition-all active:scale-95"
+                   >
+                    Get Started
+                   </button>
+                   
+                   <p className="text-center text-[10px] uppercase font-bold text-slate-400 tracking-widest pt-2">
+                      NextStep Resume v2.0
+                   </p>
+               </div>
            </div>
         </div>
       </div>

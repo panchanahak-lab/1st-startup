@@ -93,6 +93,7 @@ const LANGUAGES = [
   'Manipuri', 
   'Bodo', 
   'Sanskrit',
+  'Bhojpuri',
   'Spanish', 
   'French', 
   'German', 
@@ -413,7 +414,7 @@ const LiveInterview: React.FC = () => {
       setErrorDetail({ 
         type: err.type || 'GENERIC', 
         message: err.message || "An unexpected error occurred while initializing the session.",
-        action: err.type === 'MIC_PERMISSION' ? undefined : startInterviewFlow
+        action: startInterviewFlow
       });
     }
   };
