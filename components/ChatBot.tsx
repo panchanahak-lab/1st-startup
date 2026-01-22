@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+
 
 interface Message {
   role: 'user' | 'model';
@@ -43,6 +43,7 @@ const ChatBot: React.FC = () => {
     setIsTyping(true);
 
     try {
+      const { GoogleGenerativeAI } = await import("@google/generative-ai");
       const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
       const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
@@ -71,7 +72,7 @@ const ChatBot: React.FC = () => {
   };
 
   return (
-    <div id="chatbot-trigger" className="fixed bottom-6 right-6 md:bottom-8 md:right-8 z-[9999] print:hidden">
+    <div id="chatbot-trigger" className="fixed bottom-24 right-6 md:bottom-8 md:right-8 z-[9999] print:hidden">
       {/* Floating Action Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
@@ -93,18 +94,18 @@ const ChatBot: React.FC = () => {
       {/* Premium Chat Window */}
       {isOpen && (
         <div
-          className="fixed bottom-24 right-4 left-4 md:absolute md:bottom-20 md:right-0 md:left-auto w-auto md:w-[420px] max-w-full md:max-w-[calc(100vw-2rem)] h-[calc(100vh-160px)] md:h-[min(650px,calc(100vh-160px))] bg-white dark:bg-navy-900 rounded-[2rem] md:rounded-[3rem] shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-white/10 flex flex-col overflow-hidden animate-reveal z-[10000]"
+          className="fixed bottom-24 right-4 left-4 md:absolute md:bottom-20 md:right-0 md:left-auto w-auto md:w-[380px] max-w-full md:max-w-[calc(100vw-2rem)] h-[calc(100vh-160px)] md:h-[600px] bg-white dark:bg-navy-900 rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-white/10 flex flex-col overflow-hidden animate-reveal z-[10000]"
         >
           {/* Header Area */}
-          <div className="relative p-6 md:p-8 bg-navy-950 overflow-hidden shrink-0">
+          <div className="relative p-4 bg-navy-950 overflow-hidden shrink-0">
             <div className="aura-orb bg-brand-500 -top-20 -right-20 scale-50 opacity-10"></div>
             <div className="relative z-10 flex justify-between items-center">
               <div className="flex items-center gap-4">
-                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-brand-400 to-brand-600 rounded-xl md:rounded-2xl flex items-center justify-center shadow-lg">
-                  <i className="fas fa-brain text-white text-lg md:text-xl"></i>
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-lg flex items-center justify-center shadow-lg">
+                  <i className="fas fa-brain text-white text-base"></i>
                 </div>
                 <div>
-                  <h3 className="text-white font-black text-base md:text-lg tracking-tight leading-none mb-1">Career Architect</h3>
+                  <h3 className="text-white font-black text-sm md:text-base tracking-tight leading-none mb-0.5">Career Architect</h3>
                   <div className="flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-brand-400 rounded-full animate-pulse"></span>
                     <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Intelligence Active</span>
@@ -122,10 +123,10 @@ const ChatBot: React.FC = () => {
           </div>
 
           {/* Messages Grid */}
-          <div className="flex-1 overflow-y-auto p-5 md:p-8 space-y-6 bg-slate-50 dark:bg-navy-950 custom-scrollbar relative">
+          <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50 dark:bg-navy-950 custom-scrollbar relative">
             {messages.map((msg, i) => (
               <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                <div className={`max-w-[90%] md:max-w-[85%] p-4 md:p-6 rounded-[1.5rem] md:rounded-[2rem] text-sm shadow-sm relative ${msg.role === 'user'
+                <div className={`max-w-[90%] md:max-w-[85%] p-3 px-4 rounded-xl text-sm shadow-sm relative ${msg.role === 'user'
                   ? 'bg-brand-500 text-white rounded-tr-none'
                   : 'bg-white dark:bg-navy-900 text-navy-900 dark:text-slate-200 border border-slate-200 dark:border-white/5 rounded-tl-none shadow-md'
                   }`}>
@@ -135,7 +136,7 @@ const ChatBot: React.FC = () => {
             ))}
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-white/5 p-4 rounded-[1.2rem] rounded-tl-none flex gap-2 items-center shadow-md">
+                <div className="bg-white dark:bg-navy-900 border border-slate-200 dark:border-white/5 p-3 rounded-xl rounded-tl-none flex gap-2 items-center shadow-md">
                   <div className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce"></div>
                   <div className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:0.2s]"></div>
                   <div className="w-1.5 h-1.5 bg-brand-500 rounded-full animate-bounce [animation-delay:0.4s]"></div>
@@ -146,13 +147,13 @@ const ChatBot: React.FC = () => {
           </div>
 
           {/* Neural Shortcuts & Input */}
-          <div className="p-5 md:p-8 bg-white dark:bg-navy-950 border-t border-slate-200 dark:border-white/10 space-y-5 md:space-y-6 shrink-0 pb-8 md:pb-8">
+          <div className="p-3 bg-white dark:bg-navy-950 border-t border-slate-200 dark:border-white/10 space-y-3 shrink-0 pb-4">
             <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar -mx-2 px-2 md:mx-0 md:px-0">
               {QUICK_PROMPTS.map((prompt, idx) => (
                 <button
                   key={idx}
                   onClick={() => handleSend(prompt.label)}
-                  className="shrink-0 px-4 py-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[9px] md:text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-brand-500 hover:border-brand-500 transition-all flex items-center gap-2"
+                  className="shrink-0 px-3 py-1.5 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-brand-500 hover:border-brand-500 transition-all flex items-center gap-2"
                 >
                   <i className={`fas ${prompt.icon}`}></i>
                   {prompt.label}
@@ -167,7 +168,7 @@ const ChatBot: React.FC = () => {
                 onChange={(e) => setInput(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSend()}
                 placeholder="Ask your Architect..."
-                className="w-full pl-5 pr-14 py-4 md:py-4 bg-slate-100 dark:bg-navy-900 border border-transparent dark:border-white/5 rounded-xl md:rounded-2xl focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-navy-800 outline-none text-sm font-medium transition-all text-navy-900 dark:text-white"
+                className="w-full pl-4 pr-12 py-3 bg-slate-100 dark:bg-navy-900 border border-transparent dark:border-white/5 rounded-xl focus:ring-2 focus:ring-brand-500 focus:bg-white dark:focus:bg-navy-800 outline-none text-sm font-medium transition-all text-navy-900 dark:text-white"
               />
               <button
                 onClick={() => handleSend()}
@@ -180,8 +181,9 @@ const ChatBot: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 

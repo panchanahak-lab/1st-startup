@@ -14,9 +14,9 @@ import LiveInterview from './LiveInterview';
 import ResumeBuilder from './ResumeBuilder';
 import LinkedInOptimizer from './LinkedInOptimizer';
 import ChatBot from './ChatBot';
-import Tour from './Tour';
+
 import DesktopRecommendation from './DesktopRecommendation';
-import CookieConsent from './CookieConsent';
+
 import BackToTop from './BackToTop';
 import { useAuth } from '../lib/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -25,7 +25,7 @@ const LandingPage: React.FC = () => {
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
     const [isAuthOpen, setIsAuthOpen] = useState(false);
     const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signup');
-    const [isTourOpen, setIsTourOpen] = useState(false);
+
 
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -48,16 +48,7 @@ const LandingPage: React.FC = () => {
             setTheme(hour >= 18 || hour < 6 ? 'dark' : 'light');
         }
 
-        const hasSeenTour = localStorage.getItem('nextstep_tour_seen');
-        if (!hasSeenTour) {
-            // Small delay to let the landing page animations breathe
-            const timer = setTimeout(() => setIsTourOpen(true), 1500);
-            return () => clearTimeout(timer);
-        }
 
-        const handleStartTour = () => setIsTourOpen(true);
-        window.addEventListener('start-nextstep-tour', handleStartTour);
-        return () => window.removeEventListener('start-nextstep-tour', handleStartTour);
     }, []);
 
     useEffect(() => {
@@ -78,10 +69,7 @@ const LandingPage: React.FC = () => {
         setIsAuthOpen(true);
     };
 
-    const completeTour = () => {
-        setIsTourOpen(false);
-        localStorage.setItem('nextstep_tour_seen', 'true');
-    };
+
 
     return (
         <div className="min-h-screen transition-colors duration-500 selection:bg-brand-500/30">
@@ -99,7 +87,7 @@ const LandingPage: React.FC = () => {
                 <BottomCTA />
             </main>
             <DesktopRecommendation />
-            <CookieConsent />
+
             <ChatBot />
             <BackToTop />
             <Footer />
@@ -109,7 +97,7 @@ const LandingPage: React.FC = () => {
                 initialMode={authMode}
                 onLoginSuccess={() => { }} // AuthContext handles state now
             />
-            {isTourOpen && <Tour onComplete={completeTour} />}
+
         </div>
     );
 }
