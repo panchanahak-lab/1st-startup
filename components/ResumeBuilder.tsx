@@ -163,8 +163,15 @@ const ResumeBuilder: React.FC = () => {
 
     setLoadingBullet({ expId, index });
     try {
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
+        alert("Please set your valid VITE_GEMINI_API_KEY in environment variables (.env file).");
+        setLoadingBullet(null);
+        return;
+      }
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
       const result = await model.generateContent(`Rewrite this resume bullet point professionally using action verbs for a ${data.targetRole} position: "${text}"`);
       const enhancedText = result.response.text().trim();
       if (enhancedText) {
@@ -176,7 +183,10 @@ const ResumeBuilder: React.FC = () => {
           )
         }));
       }
-    } catch (e) { alert("AI enhancement failed."); } finally { setLoadingBullet(null); }
+    } catch (e: any) {
+      console.error("AI Enhancement Error:", e);
+      alert(`AI enhancement failed: ${e.message || JSON.stringify(e)}`);
+    } finally { setLoadingBullet(null); }
   };
 
   const updateExperience = (id: number, field: keyof ExperienceItem, value: any) => {
