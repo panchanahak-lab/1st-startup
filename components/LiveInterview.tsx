@@ -197,7 +197,7 @@ const LiveInterview: React.FC = () => {
         try {
           const base64 = (reader.result as string).split(',')[1];
           const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
-          const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+          const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
           const result = await model.generateContent([
             {
               inlineData: {
@@ -448,7 +448,7 @@ const sessionPromise = ai.live.connect({
       // const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY }); // REMOVED
       const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-pro',
+        model: 'gemini-2.0-flash',
         generationConfig: {
           responseMimeType: "application/json",
           responseSchema: {
