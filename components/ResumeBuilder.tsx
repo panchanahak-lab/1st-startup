@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // --- TYPES ---
@@ -54,45 +55,43 @@ interface ResumeData {
 type TemplateType = 'classic' | 'modern' | 'creative' | 'academic';
 
 const INITIAL_DATA: ResumeData = {
-  fullName: 'Alex Morgan',
-  targetRole: 'Senior Frontend Developer',
-  email: 'alex.morgan@example.com',
-  phone: '+1 (555) 123-4567',
-  location: 'San Francisco, CA',
-  linkedin: 'linkedin.com/in/alexmorgan',
-  website: 'alexmorgan.dev',
-  summary: 'Experienced professional with a passion for technology and user-centric design. Proven track record of delivering high-quality web applications using modern JavaScript frameworks.',
+  fullName: 'YOUR NAME',
+  targetRole: 'Target Role',
+  email: 'email@example.com',
+  phone: '+1 (555) 000-0000',
+  location: 'City, Country',
+  linkedin: 'linkedin.com/in/username',
+  website: 'yourwebsite.com',
+  summary: 'Professional summary goes here. Describe your background, key achievements, and what you bring to the role.',
   education: [
-    { id: 1, degree: 'B.S. Computer Science', school: 'University of Technology', year: '2018', grade: '3.8 GPA' }
+    { id: 1, degree: 'Degree / Major', school: 'University Name', year: 'Year', grade: 'GPA (Optional)' }
   ],
   experience: [
     {
       id: 1,
-      role: 'Frontend Developer',
-      company: 'Tech Solutions Inc',
-      location: 'New York, NY',
-      date: 'Jan 2019 - Present',
+      role: 'Job Title',
+      company: 'Company Name',
+      location: 'City, Country',
+      date: 'Date Period',
       bullets: [
-        'Responsbile for building the main website using React and ensuring it works on mobile devices.',
-        'Collaborated with designers to implement pixel-perfect user interfaces.',
-        'Optimized application performance, reducing initial load time by 40%.'
+        'Describe your key responsibilities and achievements here.',
+        'Use action verbs and quantify your results where possible.',
+        'Focus on what you accomplished, not just what you did.'
       ]
     }
   ],
-  hardSkills: 'React, TypeScript, Tailwind CSS, Node.js, GraphQL, AWS, Docker',
-  softSkills: 'Leadership, Communication, Problem Solving, Agile Methodology',
+  hardSkills: 'Skill 1, Skill 2, Skill 3, Skill 4, Skill 5',
+  softSkills: 'Soft Skill 1, Soft Skill 2, Soft Skill 3',
   certifications: [
-    { id: 1, name: 'AWS Certified Cloud Practitioner', issuer: 'Amazon Web Services', date: '2020' }
+    { id: 1, name: 'Certification Name', issuer: 'Issuer', date: 'Year' }
   ],
   languages: [
-    { id: 1, name: 'English', level: 'Native' },
-    { id: 2, name: 'Spanish', level: 'Conversational' }
+    { id: 1, name: 'Language', level: 'Fluency Level' }
   ]
 };
 
 const EMPTY_DATA: ResumeData = {
   fullName: '', targetRole: '', email: '', phone: '', location: '', linkedin: '', website: '', summary: '',
-
   education: [], experience: [], hardSkills: '', softSkills: '', certifications: [], languages: []
 };
 
@@ -106,6 +105,13 @@ const ResumeBuilder: React.FC = () => {
       const saved = localStorage.getItem('nextstep_resume_data');
       if (saved) {
         const parsed = JSON.parse(saved);
+
+        // MIGRATION FIX: If the saved data is the old dummy "Alex Morgan", 
+        // discard it and use the new generic placeholders.
+        if (parsed.fullName === 'Alex Morgan' && parsed.email === 'alex.morgan@example.com') {
+          return clone(INITIAL_DATA);
+        }
+
         const migratedExperience = (parsed.experience || []).map((exp: any) => ({
           ...exp,
           location: exp.location || '',
@@ -148,7 +154,7 @@ const ResumeBuilder: React.FC = () => {
         if (container) {
           const containerWidth = container.clientWidth - 32; // Responsive padding
           const scale = containerWidth / 794;
-          setPreviewScale(Math.min(scale, 1.2));
+          setPreviewScale(Math.min(scale, 0.85));
         }
       }
     };
@@ -248,15 +254,20 @@ const ResumeBuilder: React.FC = () => {
   const clearData = () => { if (confirm("Clear all data?")) setData(clone(EMPTY_DATA)); };
   const loadExample = () => { setData(clone(INITIAL_DATA)); };
 
+  const [isPrinting, setIsPrinting] = useState(false);
+
   const handleDownload = () => {
-    window.scrollTo({ top: 0 });
-    setTimeout(() => { window.print(); }, 100);
+    setIsPrinting(true);
+    setTimeout(() => {
+      window.print();
+      setIsPrinting(false);
+    }, 100);
   };
 
   // --- TEMPLATES ---
 
   const ClassicTemplate = () => (
-    <div className="p-[10mm] md:p-[20mm] text-slate-900 flex flex-col font-sans text-[10pt] md:text-[11pt] bg-white h-full min-h-[297mm]">
+    <div className="p-[10mm] md:p-[20mm] text-slate-900 flex flex-col font-sans text-[10pt] md:text-[11pt] bg-white h-full min-h-[290mm]">
       <header className="border-b-2 border-slate-900 pb-4 md:pb-6 mb-6 md:mb-8 text-center">
         <h1 className="text-2xl md:text-4xl font-bold uppercase mb-1 md:mb-2 tracking-tight">{data.fullName || 'YOUR NAME'}</h1>
         <h2 className="text-base md:text-lg font-bold text-brand-600 uppercase tracking-[0.2em]">{data.targetRole || 'TARGET ROLE'}</h2>
@@ -322,7 +333,7 @@ const ResumeBuilder: React.FC = () => {
   );
 
   const ModernTemplate = () => (
-    <div className="flex flex-col md:flex-row bg-white h-full min-h-[297mm] font-sans">
+    <div className="flex flex-col md:flex-row bg-white h-full min-h-[290mm] font-sans">
       <div className="w-full md:w-[32%] bg-navy-950 p-6 md:p-10 text-white">
         <div className="mb-8 md:mb-12">
           <h1 className="text-2xl md:text-3xl font-black uppercase tracking-tighter leading-none mb-3 md:mb-4">{data.fullName || 'NAME'}</h1>
@@ -381,12 +392,51 @@ const ResumeBuilder: React.FC = () => {
             ))}
           </div>
         </section>
+
+        {data.education && data.education.length > 0 && (
+          <section className="mb-12 md:mb-16">
+            <h3 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-slate-300 mb-6 md:mb-10 flex items-center gap-3 md:gap-4">
+              <span className="w-6 md:w-8 h-[2px] bg-brand-500"></span> Education
+            </h3>
+            <div className="space-y-6 md:space-y-8">
+              {data.education.map(edu => (
+                <div key={edu.id} className="relative pl-6 md:pl-10">
+                  <div className="absolute left-0 top-1 w-2 md:w-3 h-2 md:h-3 bg-slate-200 rounded-full border-2 md:border-4 border-white shadow-lg z-10"></div>
+                  <div className="absolute left-[3px] md:left-[5px] top-4 w-[1px] md:w-[2px] h-[calc(100%+2rem)] md:h-[calc(100%+3rem)] bg-slate-100 last:hidden"></div>
+
+                  <div className="flex flex-col md:flex-row md:justify-between md:items-baseline mb-1">
+                    <span className="font-black text-base md:text-lg text-navy-900 tracking-tight">{edu.degree}</span>
+                    <span className="text-[9px] md:text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5 md:mt-0">{edu.year}</span>
+                  </div>
+                  <p className="text-[10px] md:text-xs text-brand-500 font-bold uppercase tracking-wider mb-1">{edu.school}</p>
+                  {edu.grade && <p className="text-xs md:text-[13px] text-slate-500">{edu.grade}</p>}
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {data.certifications && data.certifications.length > 0 && (
+          <section>
+            <h3 className="text-[10px] md:text-[11px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] text-slate-300 mb-6 md:mb-10 flex items-center gap-3 md:gap-4">
+              <span className="w-6 md:w-8 h-[2px] bg-brand-500"></span> Certifications
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              {data.certifications.map(cert => (
+                <div key={cert.id} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <p className="font-black text-xs md:text-sm text-navy-900 mb-1">{cert.name}</p>
+                  <p className="text-[10px] md:text-xs text-slate-500 font-medium uppercase tracking-wider">{cert.issuer} • {cert.date}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
 
   const CreativeTemplate = () => (
-    <div className="bg-white h-full min-h-[297mm] font-sans text-slate-800">
+    <div className="bg-white h-full min-h-[290mm] font-sans text-slate-800">
       <header className="bg-gradient-to-br from-navy-900 to-navy-950 p-8 md:p-16 text-white text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 md:w-64 h-32 md:h-64 bg-brand-500/10 rounded-full -mr-16 md:-mr-32 -mt-16 md:-mt-32"></div>
         <h1 className="text-3xl md:text-6xl font-black uppercase tracking-tighter mb-2 md:mb-4 relative z-10">{data.fullName || 'YOUR NAME'}</h1>
@@ -401,6 +451,42 @@ const ResumeBuilder: React.FC = () => {
                 <span key={i} className="bg-white text-navy-900 border border-slate-200 px-2 py-1 md:px-3 md:py-1.5 rounded-lg text-[9px] md:text-[10px] font-black uppercase shadow-sm">{s.trim()}</span>
               ))}
             </div>
+
+            {data.education && data.education.length > 0 && (
+              <div className="mt-12 md:mt-16">
+                <h3 className="text-lg md:text-2xl font-black text-navy-900 uppercase tracking-tighter mb-8 md:mb-12 flex items-center gap-3 md:gap-4">
+                  Education <span className="h-px flex-1 bg-slate-100"></span>
+                </h3>
+                <div className="space-y-8 md:space-y-10">
+                  {data.education.map(edu => (
+                    <div key={edu.id}>
+                      <div className="flex flex-col md:flex-row md:justify-between md:items-baseline mb-2">
+                        <h4 className="text-lg md:text-xl font-black text-navy-900 uppercase tracking-tight">{edu.degree}</h4>
+                        <span className="text-[9px] md:text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1 md:mt-0">{edu.year}</span>
+                      </div>
+                      <p className="text-[10px] md:text-xs font-black text-brand-600 uppercase tracking-widest">{edu.school}</p>
+                      {edu.grade && <p className="text-xs md:text-sm text-slate-500 mt-1">{edu.grade}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.certifications && data.certifications.length > 0 && (
+              <div className="mt-12 md:mt-16">
+                <h3 className="text-lg md:text-2xl font-black text-navy-900 uppercase tracking-tighter mb-8 md:mb-12 flex items-center gap-3 md:gap-4">
+                  Certifications <span className="h-px flex-1 bg-slate-100"></span>
+                </h3>
+                <div className="flex flex-wrap gap-4 md:gap-6">
+                  {data.certifications.map(cert => (
+                    <div key={cert.id} className="relative pl-4 border-l-2 border-brand-500">
+                      <p className="font-black text-sm md:text-base text-navy-900">{cert.name}</p>
+                      <p className="text-[10px] md:text-xs text-slate-400 font-bold uppercase tracking-widest">{cert.issuer}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </section>
           <section>
             <h3 className="text-[10px] md:text-xs font-black text-navy-900 uppercase tracking-widest mb-4 md:mb-6 border-b-2 border-brand-500/20 pb-2">Fluent In</h3>
@@ -446,7 +532,7 @@ const ResumeBuilder: React.FC = () => {
   );
 
   const AcademicTemplate = () => (
-    <div className="p-[10mm] md:p-[25mm] bg-white h-full min-h-[297mm] font-serif text-slate-900">
+    <div className="p-[10mm] md:p-[25mm] bg-white h-full min-h-[290mm] font-serif text-slate-900">
       <header className="text-center mb-10 md:mb-16">
         <h1 className="text-3xl md:text-4xl font-bold mb-3 md:mb-4 tracking-tight">{data.fullName || 'YOUR NAME'}</h1>
         <div className="flex flex-wrap justify-center gap-3 md:gap-8 text-[11px] md:text-sm italic text-slate-400">
@@ -457,6 +543,25 @@ const ResumeBuilder: React.FC = () => {
           {data.location && <span>{data.location}</span>}
         </div>
       </header>
+
+      {data.education && data.education.length > 0 && (
+        <section className="mb-8 md:mb-12">
+          <h3 className="text-sm md:text-base font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] text-slate-300 mb-6 md:mb-8 border-b border-slate-100 pb-2">Education</h3>
+          {data.education.map(edu => (
+            <div key={edu.id} className="mb-6">
+              <div className="flex flex-col md:flex-row md:justify-between font-bold text-base md:text-lg mb-1">
+                <span>{edu.degree}</span>
+                <span className="text-slate-400 font-normal italic text-[11px] md:text-sm mt-0.5 md:mt-0">{edu.year}</span>
+              </div>
+              <div className="flex justify-between items-center text-[11px] md:text-sm text-slate-600">
+                <span className="italic">{edu.school}</span>
+                {edu.grade && <span className="text-slate-500">{edu.grade}</span>}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
+
       <section className="mb-8 md:mb-12">
         <h3 className="text-sm md:text-base font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] text-slate-300 mb-6 md:mb-8 border-b border-slate-100 pb-2">Experience</h3>
         {data.experience?.map(exp => (
@@ -503,6 +608,21 @@ const ResumeBuilder: React.FC = () => {
       </section>
     </div>
   );
+
+  if (isPrinting) {
+    const printRoot = document.getElementById('print-root');
+    if (printRoot) {
+      return ReactDOM.createPortal(
+        <div className="bg-white printable-content" style={{ width: '210mm', minHeight: '290mm', height: 'auto', margin: '0 auto', padding: 0, overflow: 'hidden' }}>
+          {activeTemplate === 'classic' && <ClassicTemplate />}
+          {activeTemplate === 'modern' && <ModernTemplate />}
+          {activeTemplate === 'creative' && <CreativeTemplate />}
+          {activeTemplate === 'academic' && <AcademicTemplate />}
+        </div>,
+        printRoot
+      );
+    }
+  }
 
   return (
     <section id="builder" className="py-12 md:py-20 bg-slate-50 dark:bg-navy-950/20 overflow-hidden border-t border-slate-200 dark:border-white/5">
@@ -670,7 +790,7 @@ const ResumeBuilder: React.FC = () => {
           </div>
 
           {/* PREVIEW PANEL */}
-          <div className={`flex-1 flex flex-col items-center bg-slate-100/30 dark:bg-navy-900/40 rounded-[2rem] md:rounded-[3rem] border border-slate-200 dark:border-white/10 p-4 md:p-8 min-h-[500px] md:min-h-[900px] ${viewMode === 'editor' ? 'hidden md:flex' : 'flex'}`}>
+          <div className={`flex-1 min-w-0 flex flex-col items-center bg-slate-100/30 dark:bg-navy-900/40 rounded-[2rem] md:rounded-[3rem] border border-slate-200 dark:border-white/10 p-4 md:p-8 min-h-[500px] md:min-h-[900px] ${viewMode === 'editor' ? 'hidden md:flex' : 'flex'}`}>
             <div className="w-full mb-6 md:mb-12 flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-8 print:hidden">
               <div className="flex bg-white dark:bg-navy-950 rounded-xl md:rounded-2xl shadow-xl p-1 md:p-1.5 border border-slate-200 dark:border-white/10 overflow-x-auto max-w-full no-scrollbar">
                 {['classic', 'modern', 'creative', 'academic'].map(t => (
