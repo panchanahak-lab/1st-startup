@@ -45,8 +45,6 @@ const ChatBot: React.FC = () => {
     try {
       const { GoogleGenerativeAI } = await import("@google/generative-ai");
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
-      alert(`DEBUG: Key=${apiKey.substring(0, 10)}... | Supabase=${import.meta.env.VITE_SUPABASE_URL ? 'Set' : 'Missing'}`);
-      console.log("DEBUG: Vercel Key First 10 Chars:", apiKey.substring(0, 10));
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
 
