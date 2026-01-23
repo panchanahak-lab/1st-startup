@@ -232,8 +232,12 @@
            We will add padding to the content div instead to create the margins.
         */
       @page {
-        margin: 0;
+        margin: 15mm 0 0 0;
         size: A4;
+      }
+
+      @page :first {
+        margin: 0;
       }
 
       /* Restore visual margins via padding and enforce A4 dimensions */
