@@ -23,6 +23,7 @@ interface AnalysisResult {
     suggestion: string;
     severity: 'critical' | 'warning' | 'info';
   }[];
+  optimizedData?: any; // Full ResumeData object
 }
 
 const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
@@ -66,7 +67,25 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
                 mimeType: file.type || 'application/pdf'
               }
             },
-            `Analyze this resume against JD: ${jobDescription}. Focus on scoring and identifying specific optimization gaps. Provide JSON result matching the schema: { overallScore: number, sectionScores: { summary, experience, education, skills }, issues: [{ title, location, description, highlight, suggestion, severity }] }.`
+            `Analyze this resume against JD: ${jobDescription}. 
+            1. Score it 0-100 based on ATS best practices.
+            2. Identify 3-5 critical structural gaps.
+            3. CRITICAL: Generate a fully optimized version of the resume data (optimizedData) that fixes all issues, rewrites bullets with action verbs, and helps the user pass the ATS.
+            
+            Return JSON matching this schema:
+            {
+              overallScore: number,
+              sectionScores: { summary, experience, education, skills },
+              issues: [{ title, location, description, highlight, suggestion, severity }],
+              optimizedData: {
+                fullName: string, targetRole: string, email: string, phone: string, location: string, linkedin: string, website: string, summary: string,
+                hardSkills: string, softSkills: string,
+                experience: [{ id: number, role: string, company: string, location: string, date: string, bullets: string[] }],
+                education: [{ id: number, degree: string, school: string, year: string, grade: string }],
+                certifications: [{ id: number, name: string, issuer: string, date: string }],
+                languages: [{ id: number, name: string, level: string }]
+              }
+            }`
           ]);
 
           const text = result.response.text();
@@ -227,7 +246,22 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
                     </div>
                   ))}
                 </div>
-                <button onClick={() => setStatus('idle')} className="w-full py-5 md:py-6 bg-navy-900 text-white rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-xl hover:bg-navy-900 transition-all">New Scan</button>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <button onClick={() => setStatus('idle')} className="w-full py-5 md:py-6 bg-transparent border-2 border-navy-900 dark:border-white/20 text-navy-900 dark:text-white rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-xl hover:bg-navy-900 hover:text-white transition-all">New Scan</button>
+                  {analysisResult.optimizedData && (
+                    <button
+                      onClick={() => {
+                        if (confirm("This will replace your current Resume Builder data with the optimized version and open the print dialog. Continue?")) {
+                          localStorage.setItem('nextstep_resume_data', JSON.stringify(analysisResult.optimizedData));
+                          window.location.href = '/resumes?autoprint=true';
+                        }
+                      }}
+                      className="w-full py-5 md:py-6 bg-brand-500 text-white rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/30 flex items-center justify-center gap-3"
+                    >
+                      <i className="fas fa-file-export"></i> Apply Fixes & Export PDF
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           )}

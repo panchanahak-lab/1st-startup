@@ -163,6 +163,19 @@ const ResumeBuilder: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [isAutoFit, viewMode]);
 
+  // AUTO-PRINT Logic for "Apply & Export" feature
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('autoprint') === 'true') {
+      // Small delay to ensure rendering is done before print dialog
+      setTimeout(() => {
+        window.print();
+        // Clean URL
+        window.history.replaceState({}, '', window.location.pathname);
+      }, 800);
+    }
+  }, []);
+
   const enhanceBullet = async (expId: number, index: number) => {
     const text = data.experience.find(e => e.id === expId)?.bullets[index];
     if (!text) return;
