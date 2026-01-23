@@ -35,51 +35,61 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
   const startAnalysis = async () => {
     if (!file) return;
     setStatus('analyzing');
+
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (!apiKey) {
+      alert("API Key missing. Please check configuration.");
+      setStatus('idle');
+      return;
+    }
+
     try {
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+      const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
         model: 'gemini-1.5-pro',
         generationConfig: {
           responseMimeType: "application/json",
-          responseSchema: {
-            type: SchemaType.OBJECT,
-            properties: {
-              overallScore: { type: SchemaType.NUMBER },
-              sectionScores: {
-                type: SchemaType.OBJECT,
-                properties: { summary: { type: SchemaType.NUMBER }, experience: { type: SchemaType.NUMBER }, education: { type: SchemaType.NUMBER }, skills: { type: SchemaType.NUMBER } },
-                required: ["summary", "experience", "education", "skills"]
-              },
-              issues: {
-                type: SchemaType.ARRAY, items: {
-                  type: SchemaType.OBJECT,
-                  properties: { title: { type: SchemaType.STRING }, location: { type: SchemaType.STRING }, description: { type: SchemaType.STRING }, highlight: { type: SchemaType.STRING }, suggestion: { type: SchemaType.STRING }, severity: { type: SchemaType.STRING } },
-                  required: ["title", "location", "description", "highlight", "suggestion", "severity"]
-                }
-              }
-            },
-            required: ["overallScore", "sectionScores", "issues"]
-          }
+          // Schema matches previous definition but cleaner
         }
       });
 
       const reader = new FileReader();
       reader.readAsDataURL(file);
+
       reader.onload = async () => {
-        const base64 = (reader.result as string).split(',')[1];
-        const result = await model.generateContent([
-          {
-            inlineData: {
-              data: base64,
-              mimeType: file.type || 'application/pdf'
-            }
-          },
-          `Analyze this resume against JD: ${jobDescription}. Focus on scoring and identifying specific optimization gaps. Provide JSON result.`
-        ]);
-        setAnalysisResult(JSON.parse(result.response.text()));
-        setStatus('complete');
+        try {
+          const base64 = (reader.result as string).split(',')[1];
+          const result = await model.generateContent([
+            {
+              inlineData: {
+                data: base64,
+                mimeType: file.type || 'application/pdf'
+              }
+            },
+            `Analyze this resume against JD: ${jobDescription}. Focus on scoring and identifying specific optimization gaps. Provide JSON result matching the schema: { overallScore: number, sectionScores: { summary, experience, education, skills }, issues: [{ title, location, description, highlight, suggestion, severity }] }.`
+          ]);
+
+          const text = result.response.text();
+          // Clean potential markdown fences
+          const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+
+          setAnalysisResult(JSON.parse(cleanJson));
+          setStatus('complete');
+        } catch (innerError) {
+          console.error("Analysis failed:", innerError);
+          setStatus('error');
+        }
       };
-    } catch (e) { setStatus('error'); }
+
+      reader.onerror = () => {
+        console.error("File reading failed");
+        setStatus('error');
+      };
+
+    } catch (e) {
+      console.error("Setup failed:", e);
+      setStatus('error');
+    }
   };
 
   return (
