@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { useLocation } from 'react-router-dom';
 
 // --- TYPES ---
 
@@ -142,6 +142,7 @@ const ResumeBuilder: React.FC = () => {
   const [previewScale, setPreviewScale] = useState(1);
   const [isAutoFit, setIsAutoFit] = useState(true);
   const [viewMode, setViewMode] = useState<'editor' | 'preview'>('editor'); // For mobile
+  const location = useLocation();
 
   useEffect(() => {
     localStorage.setItem('nextstep_resume_data', JSON.stringify(data));
@@ -165,7 +166,7 @@ const ResumeBuilder: React.FC = () => {
 
   // AUTO-PRINT Logic for "Apply & Export" feature
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(location.search);
     if (params.get('autoprint') === 'true') {
       // Small delay to ensure rendering is done before print dialog
       setTimeout(() => {
@@ -174,7 +175,7 @@ const ResumeBuilder: React.FC = () => {
         window.history.replaceState({}, '', window.location.pathname);
       }, 800);
     }
-  }, []);
+  }, [location]);
 
   const enhanceBullet = async (expId: number, index: number) => {
     const text = data.experience.find(e => e.id === expId)?.bullets[index];

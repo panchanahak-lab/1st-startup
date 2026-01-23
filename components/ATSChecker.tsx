@@ -253,7 +253,7 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
                       onClick={() => {
                         if (confirm("This will replace your current Resume Builder data with the optimized version and open the print dialog. Continue?")) {
                           localStorage.setItem('nextstep_resume_data', JSON.stringify(analysisResult.optimizedData));
-                          window.location.href = '/resumes?autoprint=true';
+                          window.location.href = '/?autoprint=true#builder';
                         }
                       }}
                       className="w-full py-5 md:py-6 bg-brand-500 text-white rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/30 flex items-center justify-center gap-3"
