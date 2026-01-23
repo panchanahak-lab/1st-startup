@@ -70,7 +70,11 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
             `Analyze this resume against JD: ${jobDescription}. 
             1. Score it 0-100 based on ATS best practices.
             2. Identify 3-5 critical structural gaps.
-            3. CRITICAL: Generate a fully optimized version of the resume data (optimizedData) that fixes all issues, rewrites bullets with action verbs, and helps the user pass the ATS.
+            3. CRITICAL: Generate a fully optimized version of the resume data (optimizedData) that:
+               - Fixes all parsing issues.
+               - EXTRACTS HIGH-VALUE KEYWORDS from the JD and naturally weaves them into the Summary, Skills, and Experience sections.
+               - Rewrites bullets using strong Action Verbs and the Star/XYZ method (Action + Task + Result) to maximize impact.
+               - Ensures the resume is fully ATS-compliant and tailored for the specific role.
             
             Return JSON matching this schema:
             {

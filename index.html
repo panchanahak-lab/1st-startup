@@ -115,6 +115,7 @@
     .text-gradient {
       background: linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
     }
 
@@ -185,7 +186,7 @@
       }
 
       /* Hide everything else */
-      body > *:not(#print-root) {
+      body>*:not(#print-root) {
         display: none !important;
       }
 
@@ -211,7 +212,7 @@
         This prevents browser rounding errors from triggering a second blank page.
       */
       .printable-content>div {
-        min-height: 296mm !important;
+        min-height: auto !important;
         height: auto !important;
         overflow: hidden !important;
         /* Clip any potential spillover */
@@ -227,10 +228,11 @@
       }
 
       @page {
-        margin: 0;
+        margin: 10mm;
         size: auto;
       }
     }
+
     /* Default state: Hide print root on screen */
     #print-root {
       display: none;
