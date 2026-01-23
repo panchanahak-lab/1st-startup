@@ -68,16 +68,15 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
               }
             },
             `Analyze this resume against JD: ${jobDescription}. 
-            1. STRICT SCORING (0-100):
-               - Base Score: 50
-               - +10 for exact keyword matches from JD.
-               - +10 for quantifiable results (numbers/%) in bullets.
-               - +10 for strong action verbs.
-               - +10 for clear formatting and section headers.
-               - +10 for contact info presence.
-               - -5 per critical missing section.
-               - CAP at 100. Be strict and mathematical.
+            1. STRICT SCORING (0-100) based on CONTENT MATCH:
+               - Keyword Match (0-30): Rate how well resume skills/terms match the JD.
+               - Impact & Experience (0-30): Rate specific achievements and quantifiable results (Action-Verb + Result).
+               - Formatting & Structure (0-20): Rate readability, section headers, and structure.
+               - Completeness (0-20): Contact info, education, required sections.
+               - Penalties: -5 for each critical missing keyword or section.
+               - TOTAL must equal the sum of these 4 categories minus penalties.
             2. Identify 3-5 critical structural gaps.
+            3. CRITICAL: Generate a fully optimized version of the resume data (optimizedData) that:
             2. Identify 3-5 critical structural gaps.
             3. CRITICAL: Generate a fully optimized version of the resume data (optimizedData) that:
                - Fixes all parsing issues.
