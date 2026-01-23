@@ -50,7 +50,7 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
         model: 'gemini-2.0-flash',
         generationConfig: {
           responseMimeType: "application/json",
-          // Schema matches previous definition but cleaner
+          temperature: 0,
         }
       });
 
@@ -68,7 +68,16 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
               }
             },
             `Analyze this resume against JD: ${jobDescription}. 
-            1. Score it 0-100 based on ATS best practices.
+            1. STRICT SCORING (0-100):
+               - Base Score: 50
+               - +10 for exact keyword matches from JD.
+               - +10 for quantifiable results (numbers/%) in bullets.
+               - +10 for strong action verbs.
+               - +10 for clear formatting and section headers.
+               - +10 for contact info presence.
+               - -5 per critical missing section.
+               - CAP at 100. Be strict and mathematical.
+            2. Identify 3-5 critical structural gaps.
             2. Identify 3-5 critical structural gaps.
             3. CRITICAL: Generate a fully optimized version of the resume data (optimizedData) that:
                - Fixes all parsing issues.
