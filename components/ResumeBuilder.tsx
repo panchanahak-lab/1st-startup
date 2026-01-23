@@ -287,10 +287,10 @@ const ResumeBuilder: React.FC = () => {
         </div>
       </header>
 
-      <section className="mb-8 break-inside-avoid page-break-inside-avoid">
+      <section className="mb-8">
         <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-6 tracking-widest">Experience</h3>
         {data.experience?.map(exp => (
-          <div key={exp.id} className="mb-8">
+          <div key={exp.id} className="mb-8 break-inside-avoid page-break-inside-avoid">
             <div className="flex flex-row justify-between font-bold text-sm mb-1">
               <span className="uppercase text-slate-900">{exp.role}</span>
               <span className="text-slate-500">{exp.date}</span>
@@ -309,31 +309,31 @@ const ResumeBuilder: React.FC = () => {
       </section>
 
       <div className="grid grid-cols-2 gap-12 mt-auto">
-        <section className="break-inside-avoid page-break-inside-avoid">
+        <section>
           <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 tracking-widest">Education</h3>
           {data.education?.map(edu => (
-            <div key={edu.id} className="mb-3">
+            <div key={edu.id} className="mb-3 break-inside-avoid page-break-inside-avoid">
               <p className="font-bold text-sm">{edu.degree}</p>
               <p className="text-sm text-slate-600">{edu.school} • {edu.year}</p>
             </div>
           ))}
         </section>
         {data.certifications && data.certifications.length > 0 && (
-          <section className="mb-8 break-inside-avoid page-break-inside-avoid">
+          <section className="mb-8">
             <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 tracking-widest">Certifications</h3>
             {data.certifications.map(cert => (
-              <div key={cert.id} className="mb-2">
+              <div key={cert.id} className="mb-2 break-inside-avoid page-break-inside-avoid">
                 <p className="font-bold text-sm">{cert.name}</p>
                 <p className="text-sm text-slate-600">{cert.issuer} • {cert.date}</p>
               </div>
             ))}
           </section>
         )}
-        <section className="break-inside-avoid page-break-inside-avoid">
+        <section>
           <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 tracking-widest">Languages</h3>
           <div className="space-y-1">
             {data.languages.map(l => (
-              <p key={l.id} className="text-sm font-medium text-slate-700">{l.name} — <span className="italic text-slate-400">{l.level}</span></p>
+              <p key={l.id} className="text-sm font-medium text-slate-700 break-inside-avoid page-break-inside-avoid">{l.name} — <span className="italic text-slate-400">{l.level}</span></p>
             ))}
           </div>
         </section>
@@ -371,13 +371,13 @@ const ResumeBuilder: React.FC = () => {
         </div>
       </div>
       <div className="w-[68%] p-16">
-        <section className="mb-16 break-inside-avoid page-break-inside-avoid">
+        <section className="mb-16">
           <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-10 flex items-center gap-4">
             <span className="w-8 h-[2px] bg-brand-500"></span> Experience
           </h3>
           <div className="space-y-12">
             {data.experience?.map(exp => (
-              <div key={exp.id} className="relative pl-10">
+              <div key={exp.id} className="relative pl-10 break-inside-avoid page-break-inside-avoid">
                 <div className="absolute left-0 top-1 w-3 h-3 bg-brand-500 rounded-full border-4 border-white shadow-lg z-10"></div>
                 <div className="absolute left-[5px] top-4 w-[2px] h-[calc(100%+3rem)] bg-slate-100 last:hidden"></div>
 
@@ -403,13 +403,13 @@ const ResumeBuilder: React.FC = () => {
         </section>
 
         {data.education && data.education.length > 0 && (
-          <section className="mb-16 break-inside-avoid page-break-inside-avoid">
+          <section className="mb-16">
             <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-10 flex items-center gap-4">
               <span className="w-8 h-[2px] bg-brand-500"></span> Education
             </h3>
             <div className="space-y-8">
               {data.education.map(edu => (
-                <div key={edu.id} className="relative pl-10">
+                <div key={edu.id} className="relative pl-10 break-inside-avoid page-break-inside-avoid">
                   <div className="absolute left-0 top-1 w-3 h-3 bg-slate-200 rounded-full border-4 border-white shadow-lg z-10"></div>
                   <div className="absolute left-[5px] top-4 w-[2px] h-[calc(100%+3rem)] bg-slate-100 last:hidden"></div>
 
@@ -426,13 +426,13 @@ const ResumeBuilder: React.FC = () => {
         )}
 
         {data.certifications && data.certifications.length > 0 && (
-          <section className="break-inside-avoid page-break-inside-avoid">
+          <section>
             <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-10 flex items-center gap-4">
               <span className="w-8 h-[2px] bg-brand-500"></span> Certifications
             </h3>
             <div className="grid grid-cols-2 gap-6">
               {data.certifications.map(cert => (
-                <div key={cert.id} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                <div key={cert.id} className="bg-slate-50 p-4 rounded-xl border border-slate-100 break-inside-avoid page-break-inside-avoid">
                   <p className="font-black text-sm text-navy-900 mb-1">{cert.name}</p>
                   <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{cert.issuer} • {cert.date}</p>
                 </div>
@@ -510,13 +510,13 @@ const ResumeBuilder: React.FC = () => {
           </section>
         </aside>
         <main className="p-16">
-          <section className="break-inside-avoid page-break-inside-avoid">
+          <section>
             <h3 className="text-2xl font-black text-navy-900 uppercase tracking-tighter mb-12 flex items-center gap-4">
               Professional Story <span className="h-px flex-1 bg-slate-100"></span>
             </h3>
             <div className="space-y-16">
               {data.experience?.map(exp => (
-                <div key={exp.id} className="relative group">
+                <div key={exp.id} className="relative group break-inside-avoid page-break-inside-avoid">
                   <div className="mb-6">
                     <div className="flex flex-row justify-between items-center mb-1">
                       <h4 className="text-xl font-black text-navy-900 uppercase tracking-tight group-hover:text-brand-500 transition-colors">{exp.role}</h4>
@@ -556,10 +556,10 @@ const ResumeBuilder: React.FC = () => {
       </header>
 
       {data.education && data.education.length > 0 && (
-        <section className="mb-12 break-inside-avoid page-break-inside-avoid">
+        <section className="mb-12">
           <h3 className="text-base font-bold uppercase tracking-[0.3em] text-slate-300 mb-8 border-b border-slate-100 pb-2">Education</h3>
           {data.education.map(edu => (
-            <div key={edu.id} className="mb-6">
+            <div key={edu.id} className="mb-6 break-inside-avoid page-break-inside-avoid">
               <div className="flex flex-row justify-between font-bold text-lg mb-1">
                 <span>{edu.degree}</span>
                 <span className="text-slate-400 font-normal italic text-sm">{edu.year}</span>
@@ -575,10 +575,10 @@ const ResumeBuilder: React.FC = () => {
       )
       }
 
-      <section className="mb-12 break-inside-avoid page-break-inside-avoid">
+      <section className="mb-12">
         <h3 className="text-base font-bold uppercase tracking-[0.3em] text-slate-300 mb-8 border-b border-slate-100 pb-2">Experience</h3>
         {data.experience?.map(exp => (
-          <div key={exp.id} className="mb-10">
+          <div key={exp.id} className="mb-10 break-inside-avoid page-break-inside-avoid">
             <div className="flex flex-row justify-between font-bold text-lg mb-1">
               <span>{exp.role}</span>
               <span className="text-slate-400 font-normal italic text-sm">{exp.date}</span>
@@ -628,7 +628,7 @@ const ResumeBuilder: React.FC = () => {
 
   // Always render the print portal (hidden by default via CSS)
   const printContent = (
-    <div className="bg-white printable-content" style={{ width: '210mm', minHeight: '297mm', height: 'auto', margin: '0 auto', padding: '15mm', boxSizing: 'border-box', overflow: 'hidden' }}>
+    <div className="bg-white printable-content" style={{ width: '210mm', minHeight: '297mm', height: 'auto', margin: '0 auto', boxSizing: 'border-box', overflow: 'hidden' }}>
       {activeTemplate === 'classic' && <ClassicTemplate />}
       {activeTemplate === 'modern' && <ModernTemplate />}
       {activeTemplate === 'creative' && <CreativeTemplate />}
