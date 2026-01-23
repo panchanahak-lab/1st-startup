@@ -184,6 +184,11 @@
         z-index: 10000;
       }
 
+      /* Hide everything else */
+      body > *:not(#print-root) {
+        display: none !important;
+      }
+
       body,
       html {
         background: white !important;
@@ -225,6 +230,10 @@
         margin: 0;
         size: auto;
       }
+    }
+    /* Default state: Hide print root on screen */
+    #print-root {
+      display: none;
     }
   </style>
 </head>
