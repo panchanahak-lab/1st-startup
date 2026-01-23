@@ -95,7 +95,7 @@ const ChatBot: React.FC = () => {
       {/* Premium Chat Window */}
       {isOpen && (
         <div
-          className="fixed bottom-24 right-4 left-4 md:absolute md:bottom-20 md:right-0 md:left-auto w-auto md:w-[380px] max-w-full md:max-w-[calc(100vw-2rem)] h-[70dvh] md:h-[600px] bg-white dark:bg-navy-900 rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-white/10 flex flex-col overflow-hidden animate-reveal z-[10000]"
+          className="fixed bottom-24 right-4 left-4 md:absolute md:bottom-20 md:right-0 md:left-auto w-auto md:w-[350px] max-w-full md:max-w-[calc(100vw-2rem)] h-[70dvh] md:h-[500px] md:max-h-[calc(100vh-120px)] bg-white dark:bg-navy-900 rounded-2xl shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] border border-slate-200 dark:border-white/10 flex flex-col overflow-hidden animate-reveal z-[10000]"
         >
           {/* Header Area */}
           <div className="relative p-4 bg-navy-950 overflow-hidden shrink-0">
