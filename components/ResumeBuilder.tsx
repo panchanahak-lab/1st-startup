@@ -628,7 +628,7 @@ const ResumeBuilder: React.FC = () => {
 
   // Always render the print portal (hidden by default via CSS)
   const printContent = (
-    <div className="bg-white printable-content" style={{ width: '100%', minHeight: 'auto', height: 'auto', margin: '0 auto', padding: 0, overflow: 'hidden' }}>
+    <div className="bg-white printable-content" style={{ width: '210mm', minHeight: '297mm', height: 'auto', margin: '0 auto', padding: '15mm', boxSizing: 'border-box', overflow: 'hidden' }}>
       {activeTemplate === 'classic' && <ClassicTemplate />}
       {activeTemplate === 'modern' && <ModernTemplate />}
       {activeTemplate === 'creative' && <CreativeTemplate />}

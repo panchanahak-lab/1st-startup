@@ -227,9 +227,21 @@
         display: flex !important;
       }
 
+      /* 
+           FIX: Set margin to 0 to remove browser headers/footers (date, title, url).
+           We will add padding to the content div instead to create the margins.
+        */
       @page {
-        margin: 10mm;
-        size: auto;
+        margin: 0;
+        size: A4;
+      }
+
+      /* Restore visual margins via padding and enforce A4 dimensions */
+      .printable-content {
+        padding: 15mm !important;
+        width: 210mm !important;
+        min-height: 297mm !important;
+        box-sizing: border-box !important;
       }
     }
 
