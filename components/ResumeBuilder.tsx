@@ -287,7 +287,7 @@ const ResumeBuilder: React.FC = () => {
         </div>
       </header>
 
-      <section className="mb-8">
+      <section className="mb-8 break-inside-avoid page-break-inside-avoid">
         <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-6 tracking-widest">Experience</h3>
         {data.experience?.map(exp => (
           <div key={exp.id} className="mb-8">
@@ -510,31 +510,33 @@ const ResumeBuilder: React.FC = () => {
           </section>
         </aside>
         <main className="p-16">
-          <h3 className="text-2xl font-black text-navy-900 uppercase tracking-tighter mb-12 flex items-center gap-4">
-            Professional Story <span className="h-px flex-1 bg-slate-100"></span>
-          </h3>
-          <div className="space-y-16">
-            {data.experience?.map(exp => (
-              <div key={exp.id} className="relative group">
-                <div className="mb-6">
-                  <div className="flex flex-row justify-between items-center mb-1">
-                    <h4 className="text-xl font-black text-navy-900 uppercase tracking-tight group-hover:text-brand-500 transition-colors">{exp.role}</h4>
-                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{exp.date}</span>
+          <section className="break-inside-avoid page-break-inside-avoid">
+            <h3 className="text-2xl font-black text-navy-900 uppercase tracking-tighter mb-12 flex items-center gap-4">
+              Professional Story <span className="h-px flex-1 bg-slate-100"></span>
+            </h3>
+            <div className="space-y-16">
+              {data.experience?.map(exp => (
+                <div key={exp.id} className="relative group">
+                  <div className="mb-6">
+                    <div className="flex flex-row justify-between items-center mb-1">
+                      <h4 className="text-xl font-black text-navy-900 uppercase tracking-tight group-hover:text-brand-500 transition-colors">{exp.role}</h4>
+                      <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{exp.date}</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <p className="text-xs font-black text-brand-600 uppercase tracking-widest">{exp.company}</p>
+                      <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{exp.location}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <p className="text-xs font-black text-brand-600 uppercase tracking-widest">{exp.company}</p>
-                    <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
-                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{exp.location}</p>
-                  </div>
+                  <ul className="space-y-3 mt-6 border-l-2 border-slate-50 pl-6">
+                    {exp.bullets.filter(b => b.trim()).map((b, i) => (
+                      <li key={i} className="text-[13px] text-slate-500 leading-relaxed font-medium">{b}</li>
+                    ))}
+                  </ul>
                 </div>
-                <ul className="space-y-3 mt-6 border-l-2 border-slate-50 pl-6">
-                  {exp.bullets.filter(b => b.trim()).map((b, i) => (
-                    <li key={i} className="text-[13px] text-slate-500 leading-relaxed font-medium">{b}</li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </section>
         </main>
       </div>
     </div>
@@ -573,7 +575,7 @@ const ResumeBuilder: React.FC = () => {
       )
       }
 
-      <section className="mb-12">
+      <section className="mb-12 break-inside-avoid page-break-inside-avoid">
         <h3 className="text-base font-bold uppercase tracking-[0.3em] text-slate-300 mb-8 border-b border-slate-100 pb-2">Experience</h3>
         {data.experience?.map(exp => (
           <div key={exp.id} className="mb-10">
