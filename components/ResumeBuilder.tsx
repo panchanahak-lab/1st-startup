@@ -261,64 +261,64 @@ const ResumeBuilder: React.FC = () => {
   // --- TEMPLATES ---
 
   const ClassicTemplate = () => (
-    <div className="p-[10mm] md:p-[20mm] print:p-[20mm] text-slate-900 flex flex-col font-sans text-[10pt] md:text-[11pt] print:text-[11pt] bg-white h-full min-h-[290mm]">
+    <div className="p-[20mm] text-slate-900 flex flex-col font-sans text-[11pt] bg-white h-full min-h-[290mm]">
       <header className="border-b-2 border-slate-900 pb-4 md:pb-6 mb-6 md:mb-8 text-center">
-        <h1 className="text-2xl md:text-4xl print:text-4xl font-bold uppercase mb-1 md:mb-2 print:mb-2 tracking-tight">{data.fullName || 'YOUR NAME'}</h1>
-        <h2 className="text-base md:text-lg print:text-lg font-bold text-brand-600 uppercase tracking-[0.2em]">{data.targetRole || 'TARGET ROLE'}</h2>
-        <div className="flex flex-wrap justify-center gap-x-4 md:gap-x-6 print:gap-x-6 gap-y-1 text-[10px] md:text-sm print:text-sm text-slate-500 mt-3 md:mt-4 print:mt-4 font-medium">
+        <h1 className="text-4xl font-bold uppercase mb-2 tracking-tight">{data.fullName || 'YOUR NAME'}</h1>
+        <h2 className="text-lg font-bold text-brand-600 uppercase tracking-[0.2em]">{data.targetRole || 'TARGET ROLE'}</h2>
+        <div className="flex flex-wrap justify-center gap-x-6 gap-y-1 text-sm text-slate-500 mt-4 font-medium">
           {data.phone && <span className="flex items-center gap-1"><i className="fas fa-phone text-[8px]"></i> {data.phone}</span>}
           {data.email && <span className="flex items-center gap-1"><i className="fas fa-envelope text-[8px]"></i> {data.email}</span>}
           {data.location && <span className="flex items-center gap-1"><i className="fas fa-map-marker-alt text-[8px]"></i> {data.location}</span>}
         </div>
       </header>
 
-      <section className="mb-6 md:mb-8 print:mb-8">
-        <h3 className="text-[9pt] md:text-[10pt] print:text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 md:mb-6 print:mb-6 tracking-widest">Experience</h3>
+      <section className="mb-8">
+        <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-6 tracking-widest">Experience</h3>
         {data.experience?.map(exp => (
-          <div key={exp.id} className="mb-6 md:mb-8 print:mb-8">
-            <div className="flex flex-col md:flex-row print:flex-row md:justify-between print:justify-between font-bold text-xs md:text-sm print:text-sm mb-1">
+          <div key={exp.id} className="mb-8">
+            <div className="flex flex-row justify-between font-bold text-sm mb-1">
               <span className="uppercase text-slate-900">{exp.role}</span>
-              <span className="text-slate-400 md:text-slate-500 print:text-slate-500">{exp.date}</span>
+              <span className="text-slate-500">{exp.date}</span>
             </div>
-            <div className="flex justify-between items-center mb-2 md:mb-3 print:mb-3">
-              <span className="text-xs md:text-sm print:text-sm text-brand-600 font-bold uppercase tracking-wider">{exp.company}</span>
-              <span className="text-[8px] md:text-[10px] print:text-[10px] text-slate-400 font-bold uppercase tracking-widest">{exp.location}</span>
+            <div className="flex justify-between items-center mb-3">
+              <span className="text-sm text-brand-600 font-bold uppercase tracking-wider">{exp.company}</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{exp.location}</span>
             </div>
-            <ul className="list-disc pl-4 md:pl-5 print:pl-5 space-y-1.5 md:space-y-2 print:space-y-2">
+            <ul className="list-disc pl-5 space-y-2">
               {exp.bullets.filter(b => b.trim()).map((b, i) => (
-                <li key={i} className="text-[11px] md:text-sm print:text-sm text-slate-700 leading-snug">{b}</li>
+                <li key={i} className="text-sm text-slate-700 leading-snug">{b}</li>
               ))}
             </ul>
           </div>
         ))}
       </section>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-8 md:gap-12 print:gap-12 mt-auto">
+      <div className="grid grid-cols-2 gap-12 mt-auto">
         <section>
-          <h3 className="text-[9pt] md:text-[10pt] print:text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-3 md:mb-4 print:mb-4 tracking-widest">Education</h3>
+          <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 tracking-widest">Education</h3>
           {data.education?.map(edu => (
             <div key={edu.id} className="mb-3">
-              <p className="font-bold text-xs md:text-sm print:text-sm">{edu.degree}</p>
-              <p className="text-[11px] md:text-sm print:text-sm text-slate-600">{edu.school} • {edu.year}</p>
+              <p className="font-bold text-sm">{edu.degree}</p>
+              <p className="text-sm text-slate-600">{edu.school} • {edu.year}</p>
             </div>
           ))}
         </section>
         {data.certifications && data.certifications.length > 0 && (
           <section className="mb-8">
-            <h3 className="text-[9pt] md:text-[10pt] print:text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-3 md:mb-4 print:mb-4 tracking-widest">Certifications</h3>
+            <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 tracking-widest">Certifications</h3>
             {data.certifications.map(cert => (
               <div key={cert.id} className="mb-2">
-                <p className="font-bold text-xs md:text-sm print:text-sm">{cert.name}</p>
-                <p className="text-[11px] md:text-sm print:text-sm text-slate-600">{cert.issuer} • {cert.date}</p>
+                <p className="font-bold text-sm">{cert.name}</p>
+                <p className="text-sm text-slate-600">{cert.issuer} • {cert.date}</p>
               </div>
             ))}
           </section>
         )}
         <section>
-          <h3 className="text-[9pt] md:text-[10pt] print:text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-3 md:mb-4 print:mb-4 tracking-widest">Languages</h3>
+          <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 tracking-widest">Languages</h3>
           <div className="space-y-1">
             {data.languages.map(l => (
-              <p key={l.id} className="text-[11px] md:text-sm print:text-sm font-medium text-slate-700">{l.name} — <span className="italic text-slate-400">{l.level}</span></p>
+              <p key={l.id} className="text-sm font-medium text-slate-700">{l.name} — <span className="italic text-slate-400">{l.level}</span></p>
             ))}
           </div>
         </section>
@@ -327,58 +327,58 @@ const ResumeBuilder: React.FC = () => {
   );
 
   const ModernTemplate = () => (
-    <div className="flex flex-col md:flex-row print:flex-row bg-white h-full min-h-[290mm] font-sans">
-      <div className="w-full md:w-[32%] print:w-[32%] bg-navy-950 p-6 md:p-10 print:p-10 text-white">
-        <div className="mb-8 md:mb-12 print:mb-12">
-          <h1 className="text-2xl md:text-3xl print:text-3xl font-black uppercase tracking-tighter leading-none mb-3 md:mb-4 print:mb-4">{data.fullName || 'NAME'}</h1>
-          <h2 className="text-[9px] md:text-[10px] print:text-[10px] font-bold text-brand-400 uppercase tracking-[0.2em] md:tracking-[0.3em] print:tracking-[0.3em]">{data.targetRole || 'ROLE'}</h2>
+    <div className="flex flex-row bg-white h-full min-h-[290mm] font-sans">
+      <div className="w-[32%] bg-navy-950 p-10 text-white">
+        <div className="mb-12">
+          <h1 className="text-3xl font-black uppercase tracking-tighter leading-none mb-4">{data.fullName || 'NAME'}</h1>
+          <h2 className="text-[10px] font-bold text-brand-400 uppercase tracking-[0.3em]">{data.targetRole || 'ROLE'}</h2>
         </div>
-        <div className="space-y-8 md:space-y-12 print:space-y-12">
+        <div className="space-y-12">
           <section>
-            <h3 className="text-[9px] md:text-[10px] print:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] print:tracking-[0.3em] text-slate-500 mb-4 md:mb-6 print:mb-6 border-b border-white/5 pb-2">Technical</h3>
-            <div className="flex flex-wrap gap-1.5 md:gap-2 print:gap-2">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6 border-b border-white/5 pb-2">Technical</h3>
+            <div className="flex flex-wrap gap-2">
               {data.hardSkills.split(',').map((s, i) => (
-                <span key={i} className="text-[8px] md:text-[9px] print:text-[9px] bg-white/5 border border-white/10 px-2 py-1 md:px-2.5 md:py-1.5 print:px-2.5 print:py-1.5 rounded-md font-bold">{s.trim()}</span>
+                <span key={i} className="text-[9px] bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-md font-bold">{s.trim()}</span>
               ))}
             </div>
           </section>
           <section>
-            <h3 className="text-[9px] md:text-[10px] print:text-[10px] font-black uppercase tracking-[0.2em] md:tracking-[0.3em] print:tracking-[0.3em] text-slate-500 mb-4 md:mb-6 print:mb-6 border-b border-white/5 pb-2">Languages</h3>
-            <div className="grid grid-cols-2 md:grid-cols-1 print:grid-cols-1 gap-4">
+            <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6 border-b border-white/5 pb-2">Languages</h3>
+            <div className="grid grid-cols-1 gap-4">
               {data.languages.map(l => (
                 <div key={l.id}>
-                  <p className="text-[11px] md:text-xs print:text-xs font-bold text-white">{l.name}</p>
-                  <p className="text-[8px] md:text-[9px] print:text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">{l.level}</p>
+                  <p className="text-xs font-bold text-white">{l.name}</p>
+                  <p className="text-[9px] text-slate-400 uppercase tracking-widest mt-0.5">{l.level}</p>
                 </div>
               ))}
             </div>
           </section>
         </div>
       </div>
-      <div className="w-full md:w-[68%] print:w-[68%] p-8 md:p-16 print:p-16">
-        <section className="mb-12 md:mb-16 print:mb-16">
-          <h3 className="text-[10px] md:text-[11px] print:text-[11px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] print:tracking-[0.4em] text-slate-300 mb-6 md:mb-10 print:mb-10 flex items-center gap-3 md:gap-4 print:gap-4">
-            <span className="w-6 md:w-8 print:w-8 h-[2px] bg-brand-500"></span> Experience
+      <div className="w-[68%] p-16">
+        <section className="mb-16">
+          <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-10 flex items-center gap-4">
+            <span className="w-8 h-[2px] bg-brand-500"></span> Experience
           </h3>
-          <div className="space-y-8 md:space-y-12 print:space-y-12">
+          <div className="space-y-12">
             {data.experience?.map(exp => (
-              <div key={exp.id} className="relative pl-6 md:pl-10 print:pl-10">
-                <div className="absolute left-0 top-1 w-2 md:w-3 print:w-3 h-2 md:h-3 print:h-3 bg-brand-500 rounded-full border-2 md:border-4 print:border-4 border-white shadow-lg z-10"></div>
-                <div className="absolute left-[3px] md:left-[5px] print:left-[5px] top-4 w-[1px] md:w-[2px] print:w-[2px] h-[calc(100%+2rem)] md:h-[calc(100%+3rem)] print:h-[calc(100%+3rem)] bg-slate-100 last:hidden"></div>
+              <div key={exp.id} className="relative pl-10">
+                <div className="absolute left-0 top-1 w-3 h-3 bg-brand-500 rounded-full border-4 border-white shadow-lg z-10"></div>
+                <div className="absolute left-[5px] top-4 w-[2px] h-[calc(100%+3rem)] bg-slate-100 last:hidden"></div>
 
-                <div className="flex flex-col md:flex-row print:flex-row md:justify-between print:justify-between md:items-baseline print:items-baseline mb-2">
-                  <span className="font-black text-base md:text-lg print:text-lg text-navy-900 tracking-tight">{exp.role}</span>
-                  <span className="text-[9px] md:text-[10px] print:text-[10px] text-brand-500 font-black uppercase tracking-widest mt-0.5 md:mt-0 print:mt-0">{exp.date}</span>
+                <div className="flex flex-row justify-between items-baseline mb-2">
+                  <span className="font-black text-lg text-navy-900 tracking-tight">{exp.role}</span>
+                  <span className="text-[10px] text-brand-500 font-black uppercase tracking-widest">{exp.date}</span>
                 </div>
-                <div className="flex flex-wrap items-center gap-2 md:gap-3 print:gap-3 mb-3 md:mb-4 print:mb-4">
-                  <span className="text-[10px] md:text-xs print:text-xs text-slate-400 font-bold uppercase tracking-wider">{exp.company}</span>
-                  <span className="hidden md:block print:block w-1 h-1 bg-slate-200 rounded-full"></span>
-                  <span className="text-[10px] md:text-xs print:text-xs text-slate-400 font-bold uppercase tracking-wider">{exp.location}</span>
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{exp.company}</span>
+                  <span className="block w-1 h-1 bg-slate-200 rounded-full"></span>
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{exp.location}</span>
                 </div>
-                <ul className="space-y-2 md:space-y-3 print:space-y-3">
+                <ul className="space-y-3">
                   {exp.bullets.filter(b => b.trim()).map((b, i) => (
-                    <li key={i} className="text-xs md:text-[13px] print:text-[13px] text-slate-600 leading-relaxed relative flex gap-2 md:gap-3 print:gap-3">
-                      <span className="text-brand-500 mt-1 md:mt-1.5 print:mt-1.5">•</span> {b}
+                    <li key={i} className="text-[13px] text-slate-600 leading-relaxed relative flex gap-3">
+                      <span className="text-brand-500 mt-1.5">•</span> {b}
                     </li>
                   ))}
                 </ul>
@@ -388,22 +388,22 @@ const ResumeBuilder: React.FC = () => {
         </section>
 
         {data.education && data.education.length > 0 && (
-          <section className="mb-12 md:mb-16 print:mb-16">
-            <h3 className="text-[10px] md:text-[11px] print:text-[11px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] print:tracking-[0.4em] text-slate-300 mb-6 md:mb-10 print:mb-10 flex items-center gap-3 md:gap-4 print:gap-4">
-              <span className="w-6 md:w-8 print:w-8 h-[2px] bg-brand-500"></span> Education
+          <section className="mb-16">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-10 flex items-center gap-4">
+              <span className="w-8 h-[2px] bg-brand-500"></span> Education
             </h3>
-            <div className="space-y-6 md:space-y-8 print:space-y-8">
+            <div className="space-y-8">
               {data.education.map(edu => (
-                <div key={edu.id} className="relative pl-6 md:pl-10 print:pl-10">
-                  <div className="absolute left-0 top-1 w-2 md:w-3 print:w-3 h-2 md:h-3 print:h-3 bg-slate-200 rounded-full border-2 md:border-4 print:border-4 border-white shadow-lg z-10"></div>
-                  <div className="absolute left-[3px] md:left-[5px] print:left-[5px] top-4 w-[1px] md:w-[2px] print:w-[2px] h-[calc(100%+2rem)] md:h-[calc(100%+3rem)] print:h-[calc(100%+3rem)] bg-slate-100 last:hidden"></div>
+                <div key={edu.id} className="relative pl-10">
+                  <div className="absolute left-0 top-1 w-3 h-3 bg-slate-200 rounded-full border-4 border-white shadow-lg z-10"></div>
+                  <div className="absolute left-[5px] top-4 w-[2px] h-[calc(100%+3rem)] bg-slate-100 last:hidden"></div>
 
-                  <div className="flex flex-col md:flex-row print:flex-row md:justify-between print:justify-between md:items-baseline print:items-baseline mb-1">
-                    <span className="font-black text-base md:text-lg print:text-lg text-navy-900 tracking-tight">{edu.degree}</span>
-                    <span className="text-[9px] md:text-[10px] print:text-[10px] text-slate-400 font-black uppercase tracking-widest mt-0.5 md:mt-0 print:mt-0">{edu.year}</span>
+                  <div className="flex flex-row justify-between items-baseline mb-1">
+                    <span className="font-black text-lg text-navy-900 tracking-tight">{edu.degree}</span>
+                    <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">{edu.year}</span>
                   </div>
-                  <p className="text-[10px] md:text-xs print:text-xs text-brand-500 font-bold uppercase tracking-wider mb-1">{edu.school}</p>
-                  {edu.grade && <p className="text-xs md:text-[13px] print:text-[13px] text-slate-500">{edu.grade}</p>}
+                  <p className="text-xs text-brand-500 font-bold uppercase tracking-wider mb-1">{edu.school}</p>
+                  {edu.grade && <p className="text-[13px] text-slate-500">{edu.grade}</p>}
                 </div>
               ))}
             </div>
@@ -412,14 +412,14 @@ const ResumeBuilder: React.FC = () => {
 
         {data.certifications && data.certifications.length > 0 && (
           <section>
-            <h3 className="text-[10px] md:text-[11px] print:text-[11px] font-black uppercase tracking-[0.3em] md:tracking-[0.4em] print:tracking-[0.4em] text-slate-300 mb-6 md:mb-10 print:mb-10 flex items-center gap-3 md:gap-4 print:gap-4">
-              <span className="w-6 md:w-8 print:w-8 h-[2px] bg-brand-500"></span> Certifications
+            <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-10 flex items-center gap-4">
+              <span className="w-8 h-[2px] bg-brand-500"></span> Certifications
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-4 md:gap-6 print:gap-6">
+            <div className="grid grid-cols-2 gap-6">
               {data.certifications.map(cert => (
                 <div key={cert.id} className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                  <p className="font-black text-xs md:text-sm print:text-sm text-navy-900 mb-1">{cert.name}</p>
-                  <p className="text-[10px] md:text-xs print:text-xs text-slate-500 font-medium uppercase tracking-wider">{cert.issuer} • {cert.date}</p>
+                  <p className="font-black text-sm text-navy-900 mb-1">{cert.name}</p>
+                  <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">{cert.issuer} • {cert.date}</p>
                 </div>
               ))}
             </div>
@@ -431,35 +431,35 @@ const ResumeBuilder: React.FC = () => {
 
   const CreativeTemplate = () => (
     <div className="bg-white h-full min-h-[290mm] font-sans text-slate-800">
-      <header className="bg-gradient-to-br from-navy-900 to-navy-950 p-8 md:p-16 print:p-16 text-white text-center relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-32 md:w-64 print:w-64 h-32 md:h-64 print:h-64 bg-brand-500/10 rounded-full -mr-16 md:-mr-32 print:-mr-32 -mt-16 md:-mt-32 print:-mt-32"></div>
-        <h1 className="text-3xl md:text-6xl print:text-6xl font-black uppercase tracking-tighter mb-2 md:mb-4 print:mb-4 relative z-10">{data.fullName || 'YOUR NAME'}</h1>
-        <h2 className="text-sm md:text-xl print:text-xl font-bold text-brand-400 uppercase tracking-[0.3em] md:tracking-[0.5em] print:tracking-[0.5em] relative z-10">{data.targetRole || 'TARGET ROLE'}</h2>
+      <header className="bg-gradient-to-br from-navy-900 to-navy-950 p-16 text-white text-center relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full -mr-32 -mt-32"></div>
+        <h1 className="text-6xl font-black uppercase tracking-tighter mb-4 relative z-10">{data.fullName || 'YOUR NAME'}</h1>
+        <h2 className="text-xl font-bold text-brand-400 uppercase tracking-[0.5em] relative z-10">{data.targetRole || 'TARGET ROLE'}</h2>
       </header>
-      <div className="flex flex-col md:grid print:grid md:grid-cols-[250px_1fr] print:grid-cols-[250px_1fr] lg:grid-cols-[320px_1fr] print:lg:grid-cols-[320px_1fr]">
-        <aside className="bg-slate-50/50 p-8 md:p-12 print:p-12 border-b md:border-b-0 print:border-b-0 md:border-r print:border-r border-slate-100">
-          <section className="mb-8 md:mb-12 print:mb-12">
-            <h3 className="text-[10px] md:text-xs print:text-xs font-black text-navy-900 uppercase tracking-widest mb-4 md:mb-6 print:mb-6 border-b-2 border-brand-500/20 pb-2">Technical</h3>
-            <div className="flex flex-wrap gap-1.5 md:gap-2 print:gap-2">
+      <div className="grid grid-cols-[320px_1fr]">
+        <aside className="bg-slate-50/50 p-12 border-r border-slate-100">
+          <section className="mb-12">
+            <h3 className="text-xs font-black text-navy-900 uppercase tracking-widest mb-6 border-b-2 border-brand-500/20 pb-2">Technical</h3>
+            <div className="flex flex-wrap gap-2">
               {data.hardSkills.split(',').map((s, i) => (
-                <span key={i} className="bg-white text-navy-900 border border-slate-200 px-2 py-1 md:px-3 print:px-3 md:py-1.5 print:py-1.5 rounded-lg text-[9px] md:text-[10px] print:text-[10px] font-black uppercase shadow-sm">{s.trim()}</span>
+                <span key={i} className="bg-white text-navy-900 border border-slate-200 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase shadow-sm">{s.trim()}</span>
               ))}
             </div>
 
             {data.education && data.education.length > 0 && (
-              <div className="mt-12 md:mt-16 print:mt-16">
-                <h3 className="text-lg md:text-2xl print:text-2xl font-black text-navy-900 uppercase tracking-tighter mb-8 md:mb-12 print:mb-12 flex items-center gap-3 md:gap-4 print:gap-4">
+              <div className="mt-16">
+                <h3 className="text-2xl font-black text-navy-900 uppercase tracking-tighter mb-12 flex items-center gap-4">
                   Education <span className="h-px flex-1 bg-slate-100"></span>
                 </h3>
-                <div className="space-y-8 md:space-y-10 print:space-y-10">
+                <div className="space-y-10">
                   {data.education.map(edu => (
                     <div key={edu.id}>
-                      <div className="flex flex-col md:flex-row print:flex-row md:justify-between print:justify-between md:items-baseline print:items-baseline mb-2">
-                        <h4 className="text-lg md:text-xl print:text-xl font-black text-navy-900 uppercase tracking-tight">{edu.degree}</h4>
-                        <span className="text-[9px] md:text-[10px] print:text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1 md:mt-0 print:mt-0">{edu.year}</span>
+                      <div className="flex flex-row justify-between items-baseline mb-2">
+                        <h4 className="text-xl font-black text-navy-900 uppercase tracking-tight">{edu.degree}</h4>
+                        <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{edu.year}</span>
                       </div>
-                      <p className="text-[10px] md:text-xs print:text-xs font-black text-brand-600 uppercase tracking-widest">{edu.school}</p>
-                      {edu.grade && <p className="text-xs md:text-sm print:text-sm text-slate-500 mt-1">{edu.grade}</p>}
+                      <p className="text-xs font-black text-brand-600 uppercase tracking-widest">{edu.school}</p>
+                      {edu.grade && <p className="text-sm text-slate-500 mt-1">{edu.grade}</p>}
                     </div>
                   ))}
                 </div>
@@ -467,15 +467,15 @@ const ResumeBuilder: React.FC = () => {
             )}
 
             {data.certifications && data.certifications.length > 0 && (
-              <div className="mt-12 md:mt-16 print:mt-16">
-                <h3 className="text-lg md:text-2xl print:text-2xl font-black text-navy-900 uppercase tracking-tighter mb-8 md:mb-12 print:mb-12 flex items-center gap-3 md:gap-4 print:gap-4">
+              <div className="mt-16">
+                <h3 className="text-2xl font-black text-navy-900 uppercase tracking-tighter mb-12 flex items-center gap-4">
                   Certifications <span className="h-px flex-1 bg-slate-100"></span>
                 </h3>
-                <div className="flex flex-wrap gap-4 md:gap-6 print:gap-6">
+                <div className="flex flex-wrap gap-6">
                   {data.certifications.map(cert => (
                     <div key={cert.id} className="relative pl-4 border-l-2 border-brand-500">
-                      <p className="font-black text-sm md:text-base print:text-base text-navy-900">{cert.name}</p>
-                      <p className="text-[10px] md:text-xs print:text-xs text-slate-400 font-bold uppercase tracking-widest">{cert.issuer}</p>
+                      <p className="font-black text-base text-navy-900">{cert.name}</p>
+                      <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{cert.issuer}</p>
                     </div>
                   ))}
                 </div>
@@ -483,10 +483,10 @@ const ResumeBuilder: React.FC = () => {
             )}
           </section>
           <section>
-            <h3 className="text-[10px] md:text-xs print:text-xs font-black text-navy-900 uppercase tracking-widest mb-4 md:mb-6 print:mb-6 border-b-2 border-brand-500/20 pb-2">Fluent In</h3>
-            <div className="space-y-3 md:space-y-4 print:space-y-4">
+            <h3 className="text-xs font-black text-navy-900 uppercase tracking-widest mb-6 border-b-2 border-brand-500/20 pb-2">Fluent In</h3>
+            <div className="space-y-4">
               {data.languages.map(l => (
-                <div key={l.id} className="flex justify-between items-center text-[10px] md:text-[11px] print:text-[11px] font-bold">
+                <div key={l.id} className="flex justify-between items-center text-[11px] font-bold">
                   <span className="text-navy-900">{l.name}</span>
                   <span className="text-brand-500 uppercase tracking-widest">{l.level}</span>
                 </div>
@@ -494,27 +494,27 @@ const ResumeBuilder: React.FC = () => {
             </div>
           </section>
         </aside>
-        <main className="p-8 md:p-16 print:p-16">
-          <h3 className="text-lg md:text-2xl print:text-2xl font-black text-navy-900 uppercase tracking-tighter mb-8 md:mb-12 print:mb-12 flex items-center gap-3 md:gap-4 print:gap-4">
+        <main className="p-16">
+          <h3 className="text-2xl font-black text-navy-900 uppercase tracking-tighter mb-12 flex items-center gap-4">
             Professional Story <span className="h-px flex-1 bg-slate-100"></span>
           </h3>
-          <div className="space-y-12 md:space-y-16 print:space-y-16">
+          <div className="space-y-16">
             {data.experience?.map(exp => (
               <div key={exp.id} className="relative group">
-                <div className="mb-4 md:mb-6 print:mb-6">
-                  <div className="flex flex-col md:flex-row print:flex-row md:justify-between print:justify-between md:items-center print:items-center mb-1">
-                    <h4 className="text-lg md:text-xl print:text-xl font-black text-navy-900 uppercase tracking-tight group-hover:text-brand-500 transition-colors">{exp.role}</h4>
-                    <span className="text-[9px] md:text-[10px] print:text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1 md:mt-0 print:mt-0">{exp.date}</span>
+                <div className="mb-6">
+                  <div className="flex flex-row justify-between items-center mb-1">
+                    <h4 className="text-xl font-black text-navy-900 uppercase tracking-tight group-hover:text-brand-500 transition-colors">{exp.role}</h4>
+                    <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{exp.date}</span>
                   </div>
-                  <div className="flex items-center gap-2 md:gap-3 print:gap-3">
-                    <p className="text-[10px] md:text-xs print:text-xs font-black text-brand-600 uppercase tracking-widest">{exp.company}</p>
+                  <div className="flex items-center gap-3">
+                    <p className="text-xs font-black text-brand-600 uppercase tracking-widest">{exp.company}</p>
                     <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
-                    <p className="text-[10px] md:text-xs print:text-xs font-bold text-slate-400 uppercase tracking-widest">{exp.location}</p>
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{exp.location}</p>
                   </div>
                 </div>
-                <ul className="space-y-2 md:space-y-3 print:space-y-3 mt-4 md:mt-6 print:mt-6 border-l-2 border-slate-50 pl-4 md:pl-6 print:pl-6">
+                <ul className="space-y-3 mt-6 border-l-2 border-slate-50 pl-6">
                   {exp.bullets.filter(b => b.trim()).map((b, i) => (
-                    <li key={i} className="text-[12px] md:text-[13px] print:text-[13px] text-slate-500 leading-relaxed font-medium">{b}</li>
+                    <li key={i} className="text-[13px] text-slate-500 leading-relaxed font-medium">{b}</li>
                   ))}
                 </ul>
               </div>
@@ -526,29 +526,29 @@ const ResumeBuilder: React.FC = () => {
   );
 
   const AcademicTemplate = () => (
-    <div className="p-[10mm] md:p-[25mm] print:p-[25mm] bg-white h-full min-h-[290mm] font-serif text-slate-900">
-      <header className="text-center mb-10 md:mb-16 print:mb-16">
-        <h1 className="text-3xl md:text-4xl print:text-4xl font-bold mb-3 md:mb-4 print:mb-4 tracking-tight">{data.fullName || 'YOUR NAME'}</h1>
-        <div className="flex flex-wrap justify-center gap-3 md:gap-8 print:gap-8 text-[11px] md:text-sm print:text-sm italic text-slate-400">
+    <div className="p-[25mm] bg-white h-full min-h-[290mm] font-serif text-slate-900">
+      <header className="text-center mb-16">
+        <h1 className="text-4xl font-bold mb-4 tracking-tight">{data.fullName || 'YOUR NAME'}</h1>
+        <div className="flex flex-wrap justify-center gap-8 text-sm italic text-slate-400">
           {data.email && <span>{data.email}</span>}
-          <span className="hidden md:inline print:inline">•</span>
+          <span className="inline">•</span>
           {data.phone && <span>{data.phone}</span>}
-          <span className="hidden md:inline print:inline">•</span>
+          <span className="inline">•</span>
           {data.location && <span>{data.location}</span>}
         </div>
       </header>
 
       {data.education && data.education.length > 0 && (
-        <section className="mb-8 md:mb-12 print:mb-12">
-          <h3 className="text-sm md:text-base print:text-base font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] print:tracking-[0.3em] text-slate-300 mb-6 md:mb-8 print:mb-8 border-b border-slate-100 pb-2">Education</h3>
+        <section className="mb-12">
+          <h3 className="text-base font-bold uppercase tracking-[0.3em] text-slate-300 mb-8 border-b border-slate-100 pb-2">Education</h3>
           {data.education.map(edu => (
             <div key={edu.id} className="mb-6">
-              <div className="flex flex-col md:flex-row print:flex-row md:justify-between print:justify-between font-bold text-base md:text-lg print:text-lg mb-1">
+              <div className="flex flex-row justify-between font-bold text-lg mb-1">
                 <span>{edu.degree}</span>
-                <span className="text-slate-400 font-normal italic text-[11px] md:text-sm print:text-sm mt-0.5 md:mt-0 print:mt-0">{edu.year}</span>
+                <span className="text-slate-400 font-normal italic text-sm">{edu.year}</span>
               </div>
 
-              <div className="flex justify-between items-center text-[11px] md:text-sm print:text-sm text-slate-600">
+              <div className="flex justify-between items-center text-sm text-slate-600">
                 <span className="italic">{edu.school}</span>
                 {edu.grade && <span className="text-slate-500">{edu.grade}</span>}
               </div>
@@ -558,21 +558,21 @@ const ResumeBuilder: React.FC = () => {
       )
       }
 
-      <section className="mb-8 md:mb-12 print:mb-12">
-        <h3 className="text-sm md:text-base print:text-base font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] print:tracking-[0.3em] text-slate-300 mb-6 md:mb-8 print:mb-8 border-b border-slate-100 pb-2">Experience</h3>
+      <section className="mb-12">
+        <h3 className="text-base font-bold uppercase tracking-[0.3em] text-slate-300 mb-8 border-b border-slate-100 pb-2">Experience</h3>
         {data.experience?.map(exp => (
-          <div key={exp.id} className="mb-8 md:mb-10 print:mb-10">
-            <div className="flex flex-col md:flex-row print:flex-row md:justify-between print:justify-between font-bold text-base md:text-lg print:text-lg mb-1">
+          <div key={exp.id} className="mb-10">
+            <div className="flex flex-row justify-between font-bold text-lg mb-1">
               <span>{exp.role}</span>
-              <span className="text-slate-400 font-normal italic text-[11px] md:text-sm print:text-sm mt-0.5 md:mt-0 print:mt-0">{exp.date}</span>
+              <span className="text-slate-400 font-normal italic text-sm">{exp.date}</span>
             </div>
-            <div className="flex justify-between items-center mb-3 md:mb-4 print:mb-4 text-[11px] md:text-sm print:text-sm text-slate-600">
+            <div className="flex justify-between items-center mb-4 text-sm text-slate-600">
               <span className="italic">{exp.company}</span>
-              <span className="uppercase tracking-widest text-[8px] md:text-[10px] print:text-[10px]">{exp.location}</span>
+              <span className="uppercase tracking-widest text-[10px]">{exp.location}</span>
             </div>
-            <ul className="list-disc pl-6 md:pl-8 print:pl-8 space-y-1.5 md:space-y-2 print:space-y-2">
+            <ul className="list-disc pl-8 space-y-2">
               {exp.bullets.filter(b => b.trim()).map((b, i) => (
-                <li key={i} className="text-[10pt] md:text-[11pt] print:text-[11pt] leading-relaxed text-slate-700">{b}</li>
+                <li key={i} className="text-[11pt] leading-relaxed text-slate-700">{b}</li>
               ))}
             </ul>
           </div>
@@ -580,13 +580,13 @@ const ResumeBuilder: React.FC = () => {
       </section>
       {
         data.certifications && data.certifications.length > 0 && (
-          <section className="mb-8 md:mb-12 print:mb-12">
-            <h3 className="text-sm md:text-base print:text-base font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] print:tracking-[0.3em] text-slate-300 mb-6 md:mb-8 print:mb-8 border-b border-slate-100 pb-2">Certifications</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 print:grid-cols-2 gap-4">
+          <section className="mb-12">
+            <h3 className="text-base font-bold uppercase tracking-[0.3em] text-slate-300 mb-8 border-b border-slate-100 pb-2">Certifications</h3>
+            <div className="grid grid-cols-2 gap-4">
               {data.certifications.map(cert => (
                 <div key={cert.id}>
-                  <p className="text-[10pt] md:text-[11pt] print:text-[11pt] font-bold text-slate-900">{cert.name}</p>
-                  <p className="text-[9pt] md:text-[10pt] print:text-[10pt] italic text-slate-600">{cert.issuer} ({cert.date})</p>
+                  <p className="text-[11pt] font-bold text-slate-900">{cert.name}</p>
+                  <p className="text-[10pt] italic text-slate-600">{cert.issuer} ({cert.date})</p>
                 </div>
               ))}
             </div>
@@ -594,12 +594,12 @@ const ResumeBuilder: React.FC = () => {
         )
       }
       <section>
-        <h3 className="text-sm md:text-base print:text-base font-bold uppercase tracking-[0.2em] md:tracking-[0.3em] print:tracking-[0.3em] text-slate-300 mb-6 md:mb-8 print:mb-8 border-b border-slate-100 pb-2">Languages</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 print:grid-cols-3 gap-6 md:gap-8 print:gap-8">
+        <h3 className="text-base font-bold uppercase tracking-[0.3em] text-slate-300 mb-8 border-b border-slate-100 pb-2">Languages</h3>
+        <div className="grid grid-cols-3 gap-8">
           {data.languages.map(l => (
             <div key={l.id}>
-              <p className="text-[10pt] md:text-[11pt] print:text-[11pt] font-bold text-slate-900">{l.name}</p>
-              <p className="text-[9pt] md:text-[10pt] print:text-[10pt] italic text-slate-500">{l.level}</p>
+              <p className="text-[11pt] font-bold text-slate-900">{l.name}</p>
+              <p className="text-[10pt] italic text-slate-500">{l.level}</p>
             </div>
           ))}
         </div>
