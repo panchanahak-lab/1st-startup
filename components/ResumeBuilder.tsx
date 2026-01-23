@@ -1,4 +1,5 @@
 
+import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useLocation } from 'react-router-dom';
