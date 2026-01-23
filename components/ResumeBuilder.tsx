@@ -453,7 +453,7 @@ const ResumeBuilder: React.FC = () => {
       </header>
       <div className="grid grid-cols-[320px_1fr]">
         <aside className="bg-slate-50/50 p-12 border-r border-slate-100">
-          <section className="mb-12 break-inside-avoid page-break-inside-avoid">
+          <section className="mb-12">
             <h3 className="text-xs font-black text-navy-900 uppercase tracking-widest mb-6 border-b-2 border-brand-500/20 pb-2">Technical</h3>
             <div className="flex flex-wrap gap-2">
               {data.hardSkills.split(',').map((s, i) => (
@@ -468,7 +468,7 @@ const ResumeBuilder: React.FC = () => {
                 </h3>
                 <div className="space-y-10">
                   {data.education.map(edu => (
-                    <div key={edu.id}>
+                    <div key={edu.id} className="break-inside-avoid page-break-inside-avoid">
                       <div className="flex flex-row justify-between items-baseline mb-2">
                         <h4 className="text-xl font-black text-navy-900 uppercase tracking-tight">{edu.degree}</h4>
                         <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{edu.year}</span>
@@ -488,7 +488,7 @@ const ResumeBuilder: React.FC = () => {
                 </h3>
                 <div className="flex flex-wrap gap-6">
                   {data.certifications.map(cert => (
-                    <div key={cert.id} className="relative pl-4 border-l-2 border-brand-500">
+                    <div key={cert.id} className="relative pl-4 border-l-2 border-brand-500 break-inside-avoid page-break-inside-avoid">
                       <p className="font-black text-base text-navy-900">{cert.name}</p>
                       <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">{cert.issuer}</p>
                     </div>
@@ -497,7 +497,7 @@ const ResumeBuilder: React.FC = () => {
               </div>
             )}
           </section>
-          <section className="break-inside-avoid page-break-inside-avoid">
+          <section>
             <h3 className="text-xs font-black text-navy-900 uppercase tracking-widest mb-6 border-b-2 border-brand-500/20 pb-2">Fluent In</h3>
             <div className="space-y-4">
               {data.languages.map(l => (
