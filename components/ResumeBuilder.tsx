@@ -309,7 +309,7 @@ const ResumeBuilder: React.FC = () => {
       </section>
 
       <div className="grid grid-cols-2 gap-12 mt-auto">
-        <section>
+        <section className="break-inside-avoid page-break-inside-avoid">
           <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 tracking-widest">Education</h3>
           {data.education?.map(edu => (
             <div key={edu.id} className="mb-3">
@@ -319,7 +319,7 @@ const ResumeBuilder: React.FC = () => {
           ))}
         </section>
         {data.certifications && data.certifications.length > 0 && (
-          <section className="mb-8">
+          <section className="mb-8 break-inside-avoid page-break-inside-avoid">
             <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 tracking-widest">Certifications</h3>
             {data.certifications.map(cert => (
               <div key={cert.id} className="mb-2">
@@ -329,7 +329,7 @@ const ResumeBuilder: React.FC = () => {
             ))}
           </section>
         )}
-        <section>
+        <section className="break-inside-avoid page-break-inside-avoid">
           <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 tracking-widest">Languages</h3>
           <div className="space-y-1">
             {data.languages.map(l => (
@@ -349,7 +349,7 @@ const ResumeBuilder: React.FC = () => {
           <h2 className="text-[10px] font-bold text-brand-400 uppercase tracking-[0.3em]">{data.targetRole || 'ROLE'}</h2>
         </div>
         <div className="space-y-12">
-          <section>
+          <section className="break-inside-avoid page-break-inside-avoid">
             <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-6 border-b border-white/5 pb-2">Technical</h3>
             <div className="flex flex-wrap gap-2">
               {data.hardSkills.split(',').map((s, i) => (
@@ -371,7 +371,7 @@ const ResumeBuilder: React.FC = () => {
         </div>
       </div>
       <div className="w-[68%] p-16">
-        <section className="mb-16">
+        <section className="mb-16 break-inside-avoid page-break-inside-avoid">
           <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-10 flex items-center gap-4">
             <span className="w-8 h-[2px] bg-brand-500"></span> Experience
           </h3>
@@ -403,7 +403,7 @@ const ResumeBuilder: React.FC = () => {
         </section>
 
         {data.education && data.education.length > 0 && (
-          <section className="mb-16">
+          <section className="mb-16 break-inside-avoid page-break-inside-avoid">
             <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-10 flex items-center gap-4">
               <span className="w-8 h-[2px] bg-brand-500"></span> Education
             </h3>
@@ -426,7 +426,7 @@ const ResumeBuilder: React.FC = () => {
         )}
 
         {data.certifications && data.certifications.length > 0 && (
-          <section>
+          <section className="break-inside-avoid page-break-inside-avoid">
             <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-10 flex items-center gap-4">
               <span className="w-8 h-[2px] bg-brand-500"></span> Certifications
             </h3>
@@ -453,7 +453,7 @@ const ResumeBuilder: React.FC = () => {
       </header>
       <div className="grid grid-cols-[320px_1fr]">
         <aside className="bg-slate-50/50 p-12 border-r border-slate-100">
-          <section className="mb-12">
+          <section className="mb-12 break-inside-avoid page-break-inside-avoid">
             <h3 className="text-xs font-black text-navy-900 uppercase tracking-widest mb-6 border-b-2 border-brand-500/20 pb-2">Technical</h3>
             <div className="flex flex-wrap gap-2">
               {data.hardSkills.split(',').map((s, i) => (
@@ -497,7 +497,7 @@ const ResumeBuilder: React.FC = () => {
               </div>
             )}
           </section>
-          <section>
+          <section className="break-inside-avoid page-break-inside-avoid">
             <h3 className="text-xs font-black text-navy-900 uppercase tracking-widest mb-6 border-b-2 border-brand-500/20 pb-2">Fluent In</h3>
             <div className="space-y-4">
               {data.languages.map(l => (
@@ -554,7 +554,7 @@ const ResumeBuilder: React.FC = () => {
       </header>
 
       {data.education && data.education.length > 0 && (
-        <section className="mb-12">
+        <section className="mb-12 break-inside-avoid page-break-inside-avoid">
           <h3 className="text-base font-bold uppercase tracking-[0.3em] text-slate-300 mb-8 border-b border-slate-100 pb-2">Education</h3>
           {data.education.map(edu => (
             <div key={edu.id} className="mb-6">
@@ -595,7 +595,7 @@ const ResumeBuilder: React.FC = () => {
       </section>
       {
         data.certifications && data.certifications.length > 0 && (
-          <section className="mb-12">
+          <section className="mb-12 break-inside-avoid page-break-inside-avoid">
             <h3 className="text-base font-bold uppercase tracking-[0.3em] text-slate-300 mb-8 border-b border-slate-100 pb-2">Certifications</h3>
             <div className="grid grid-cols-2 gap-4">
               {data.certifications.map(cert => (
@@ -608,7 +608,7 @@ const ResumeBuilder: React.FC = () => {
           </section>
         )
       }
-      <section>
+      <section className="break-inside-avoid page-break-inside-avoid">
         <h3 className="text-base font-bold uppercase tracking-[0.3em] text-slate-300 mb-8 border-b border-slate-100 pb-2">Languages</h3>
         <div className="grid grid-cols-3 gap-8">
           {data.languages.map(l => (
