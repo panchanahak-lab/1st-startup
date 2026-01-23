@@ -168,6 +168,22 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
             </div>
           )}
 
+          {status === 'error' && (
+            <div className="flex flex-col items-center justify-center text-center py-12 md:py-24 animate-reveal">
+              <div className="w-20 h-20 md:w-24 md:h-24 bg-red-500/10 rounded-full flex items-center justify-center mb-6 md:mb-8">
+                <i className="fas fa-triangle-exclamation text-3xl md:text-5xl text-red-500"></i>
+              </div>
+              <h3 className="text-2xl md:text-3xl font-black dark:text-white mb-3 md:mb-4">Analysis Interrupted</h3>
+              <p className="text-slate-500 max-w-md mx-auto mb-8 font-medium">The neural link encountered an error. This is usually due to network connectivity or API limits.</p>
+              <button
+                onClick={() => setStatus('idle')}
+                className="px-8 py-4 bg-navy-900 dark:bg-white text-white dark:text-navy-900 rounded-xl font-black uppercase tracking-widest shadow-lg hover:scale-105 transition-transform flex items-center gap-3"
+              >
+                <i className="fas fa-redo"></i> Retry Scan
+              </button>
+            </div>
+          )}
+
           {status === 'complete' && analysisResult && (
             <div className="animate-reveal grid lg:grid-cols-[1fr_2fr] gap-8 md:gap-16">
               <div className="space-y-6 md:space-y-8">
