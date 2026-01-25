@@ -64,9 +64,14 @@ const ChatBot: React.FC = () => {
       const result = await chat.sendMessage(userMessage.text);
       const aiText = result.response.text();
       setMessages(prev => [...prev, { role: 'model', text: aiText }]);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Chat error:", error);
-      setMessages(prev => [...prev, { role: 'model', text: "Neural link interrupted. Please verify your connection." }]);
+      const isKeyMissing = !import.meta.env.VITE_GEMINI_API_KEY;
+      const errorMessage = error.message || JSON.stringify(error);
+      setMessages(prev => [...prev, {
+        role: 'model',
+        text: `Error: ${errorMessage}. (Key Loaded: ${!isKeyMissing})`
+      }]);
     } finally {
       setIsTyping(false);
     }
