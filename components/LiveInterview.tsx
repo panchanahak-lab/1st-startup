@@ -315,116 +315,45 @@ const LiveInterview: React.FC = () => {
       analyser.fftSize = 256;
       analyserRef.current = analyser;
 
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) throw new Error("API Key missing");
+
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+      const chatSession = model.startChat({
+        history: [
+          {
+            role: "user",
+            parts: [{
+              text: `You are an expert interviewer in ${language} for the role of ${jobRole}.
+            Your persona: ${PERSONAS[persona].instruction}
+            
+            CANDIDATE CONTEXT (From Resume):
+            ${resumeContext || 'No resume provided. Ask about their background first.'}
+            
+            MANDATORY INSTRUCTIONS:
+            1. Speak ONLY in ${language}.
+            2. Ask one specific, challenging question at a time.
+            3. Drill down into the specific achievements listed in their resume context.
+            4. If they give a generic answer, ask for a specific metric or example.
+            5. Start immediately with a professional greeting and your first question.` }]
+          }
+        ]
+      });
+
+      sessionRef.current = chatSession;
       setIsConnected(true);
       setStage('interview');
-// NOTE: The Live API (WebSockets) is not fully supported in the client-side SDK yet.
-// Falling back to text-based or simplified interaction would be the next step.
-// For now, to fix the build, we emulate a connection success.
-/*
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY });
+      drawVisualizer();
 
-const connectionTimeout = setTimeout(() => {
- if (stage === 'initializing') {
-   setErrorDetail({
-     type: 'NETWORK',
-     message: "Neural link is taking too long. This usually indicates a network drop or firewall issue.",
-     action: startInterviewFlow
-   });
-   cleanupAudio();
-   setStage('setup');
- }
-}, 15000);
+      const startResult = await chatSession.sendMessage("Start the interview now.");
+      const text = startResult.response.text();
+      setLiveAiText(text);
+      setTranscripts(prev => [...prev, { role: 'ai', text }]);
+      speakText(text);
 
-const sessionPromise = ai.live.connect({
- model: 'gemini-2.5-flash-native-audio-preview-12-2025',
- config: {
-   responseModalities: [Modality.AUDIO],
-   speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } } },
-   inputAudioTranscription: {},
-   outputAudioTranscription: {},
-   systemInstruction: `You are an expert interviewer in ${language} for the role of ${jobRole}.
-   Your persona: ${PERSONAS[persona].instruction}
-   
-   CANDIDATE CONTEXT (From Resume):
-   ${resumeContext || 'No resume provided. Ask about their background first.'}
-   
-   MANDATORY INSTRUCTIONS:
-   1. Speak ONLY in ${language}.
-   2. Ask one specific, challenging question at a time.
-   3. Drill down into the specific achievements listed in their resume context.
-   4. If they give a generic answer, ask for a specific metric or example.
-   5. Start immediately with a professional greeting and your first question.`,
- },
- callbacks: {
-   onopen: () => {
-     clearTimeout(connectionTimeout);
-     setIsConnected(true);
-     setStage('interview');
-     drawVisualizer();
-     const source = inputCtx.createMediaStreamSource(stream);
-     const scriptProcessor = inputCtx.createScriptProcessor(4096, 1, 1);
-     scriptProcessor.onaudioprocess = (e) => {
-       const inputData = e.inputBuffer.getChannelData(0);
-       const pcmBlob = createBlob(inputData);
-       sessionPromise.then(s => s.sendRealtimeInput({ media: pcmBlob }));
-     };
-     source.connect(analyser); analyser.connect(scriptProcessor); scriptProcessor.connect(inputCtx.destination);
-     sessionPromise.then(s => sessionRef.current = s);
-   },
-   onmessage: async (msg: LiveServerMessage) => {
-     if (msg.serverContent?.interrupted) {
-       sourcesRef.current.forEach(s => { try { s.stop(); } catch (e) { } });
-       sourcesRef.current.clear();
-       nextStartTimeRef.current = 0;
-       return;
-     }
-     if (msg.serverContent?.inputTranscription) {
-       currentInputTransRef.current += msg.serverContent.inputTranscription.text;
-       setLiveUserText(currentInputTransRef.current);
-     }
-     if (msg.serverContent?.outputTranscription) {
-       currentOutputTransRef.current += msg.serverContent.outputTranscription.text;
-       setLiveAiText(currentOutputTransRef.current);
-     }
-     if (msg.serverContent?.turnComplete) {
-       if (currentInputTransRef.current || currentOutputTransRef.current) {
-         setTranscripts(p => [...p, { role: 'user', text: currentInputTransRef.current }, { role: 'ai', text: currentOutputTransRef.current }]);
-       }
-       currentInputTransRef.current = ''; currentOutputTransRef.current = '';
-       setLiveUserText(''); setLiveAiText('');
-     }
-     const parts = msg.serverContent?.modelTurn?.parts || [];
-     for (const part of parts) {
-       const audioData = part.inlineData?.data;
-       if (audioData) {
-         nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputCtx.currentTime);
-         const buffer = await pcmToAudioBuffer(decode(audioData), outputCtx, 24000, 1);
-         const source = outputCtx.createBufferSource();
-         source.buffer = buffer; source.connect(outputNode);
-         source.addEventListener('ended', () => sourcesRef.current.delete(source));
-         source.start(nextStartTimeRef.current);
-         nextStartTimeRef.current += buffer.duration;
-         sourcesRef.current.add(source);
-       }
-     }
-   },
-   onerror: (e) => {
-     console.error("Live API Error:", e);
-     setErrorDetail({ type: 'AI_SYNC', message: "Neural link synchronization lost. This can happen during high traffic periods." });
-     cleanupAudio();
-     setStage('setup');
-   },
-   onclose: () => {
-     setIsConnected(false);
-     if (stage === 'interview') {
-       setErrorDetail({ type: 'AI_SYNC', message: "Session closed unexpectedly. Please restart the simulation." });
-       setStage('setup');
-     }
-   }
- }
-});
-*/ } catch (err: any) {
+    } catch (err: any) {
       console.error(err);
       cleanupAudio();
       setStage('setup');
@@ -433,6 +362,64 @@ const sessionPromise = ai.live.connect({
         message: err.message || "An unexpected error occurred while initializing the session.",
         action: startInterviewFlow
       });
+    }
+  };
+
+  const speakText = (text: string) => {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = language === 'Hindi' ? 'hi-IN' : 'en-US';
+    utterance.onend = () => startListening();
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      alert("Your browser does not support speech recognition. Please use Chrome.");
+      return;
+    }
+    // @ts-ignore
+    const recognition = new window.webkitSpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.lang = language === 'Hindi' ? 'hi-IN' : 'en-US';
+
+    recognition.onresult = (event: any) => {
+      let interimTranscript = '';
+      for (let i = event.resultIndex; i < event.results.length; ++i) {
+        if (event.results[i].isFinal) {
+          setLiveUserText(event.results[i][0].transcript);
+          handleUserResponse(event.results[i][0].transcript);
+        } else {
+          interimTranscript += event.results[i][0].transcript;
+          setLiveUserText(interimTranscript);
+        }
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      // Handle no speech or error
+    };
+
+    recognition.start();
+  };
+
+  const handleUserResponse = async (userText: string) => {
+    setTranscripts(prev => [...prev, { role: 'user', text: userText }]);
+    setLiveUserText(userText);
+    setLiveAiText("Interviewer is thinking...");
+
+    try {
+      if (!sessionRef.current) return;
+      const result = await sessionRef.current.sendMessage(userText);
+      const responseText = result.response.text();
+
+      setLiveAiText(responseText);
+      setTranscripts(prev => [...prev, { role: 'ai', text: responseText }]);
+      speakText(responseText);
+    } catch (error) {
+      console.error("Gemini Error:", error);
+      setLiveAiText("Error getting response.");
     }
   };
 
