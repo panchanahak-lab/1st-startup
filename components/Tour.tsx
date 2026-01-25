@@ -86,7 +86,7 @@ const Tour: React.FC<TourProps> = ({ onComplete }) => {
     setIsSpeaking(true);
     try {
       const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       // Note: TTS via generative-ai SDK is not directly supported in the same way as the server SDK.
       // We will skip the TTS call for now to fix the build, or implementation needs to change to a standard TTS service.
@@ -108,6 +108,7 @@ const Tour: React.FC<TourProps> = ({ onComplete }) => {
       console.log("TTS temporarily disabled during migration.");
       return;
 
+      /*
       const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
       if (base64Audio) {
         const ctx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
@@ -125,6 +126,7 @@ const Tour: React.FC<TourProps> = ({ onComplete }) => {
         source.onended = () => setIsSpeaking(false);
         source.start();
       }
+      */
     } catch (error) {
       console.error("TTS failed", error);
       setIsSpeaking(false);

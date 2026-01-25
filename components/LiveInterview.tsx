@@ -102,6 +102,38 @@ const LANGUAGES = [
   'Mandarin'
 ];
 
+const LANGUAGE_CODES: Record<string, string> = {
+  'English': 'en-US',
+  'Hindi': 'hi-IN',
+  'Bengali': 'bn-IN',
+  'Telugu': 'te-IN',
+  'Marathi': 'mr-IN',
+  'Tamil': 'ta-IN',
+  'Urdu': 'ur-IN',
+  'Gujarati': 'gu-IN',
+  'Kannada': 'kn-IN',
+  'Malayalam': 'ml-IN',
+  'Odia': 'or-IN',
+  'Punjabi': 'pa-IN',
+  'Assamese': 'as-IN',
+  'Maithili': 'mai-IN',
+  'Santali': 'sat-IN',
+  'Kashmiri': 'ks-IN',
+  'Nepali': 'ne-NP',
+  'Konkani': 'kok-IN',
+  'Sindhi': 'sd-IN',
+  'Dogri': 'doi-IN',
+  'Manipuri': 'mni-IN',
+  'Bodo': 'brx-IN',
+  'Sanskrit': 'sa-IN',
+  'Bhojpuri': 'bho-IN',
+  'Spanish': 'es-ES',
+  'French': 'fr-FR',
+  'German': 'de-DE',
+  'Japanese': 'ja-JP',
+  'Mandarin': 'zh-CN'
+};
+
 const PERSONAS = {
   mentor: {
     name: 'Supportive Mentor',
@@ -145,6 +177,9 @@ const LiveInterview: React.FC = () => {
   const [feedback, setFeedback] = useState<InterviewFeedback | null>(null);
   const [errorDetail, setErrorDetail] = useState<ErrorDetail | null>(null);
   const [transcripts, setTranscripts] = useState<TranscriptItem[]>([]);
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [debugMsg, setDebugMsg] = useState<string>('');
 
   const [liveUserText, setLiveUserText] = useState('');
   const [liveAiText, setLiveAiText] = useState('');
@@ -201,7 +236,7 @@ const LiveInterview: React.FC = () => {
             throw new Error("API Key is missing. Please set VITE_GEMINI_API_KEY in your environment variables.");
           }
           const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+          const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
           const result = await model.generateContent([
             {
               inlineData: {
@@ -319,7 +354,7 @@ const LiveInterview: React.FC = () => {
       if (!apiKey) throw new Error("API Key missing");
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
       const chatSession = model.startChat({
         history: [
@@ -337,7 +372,10 @@ const LiveInterview: React.FC = () => {
             2. Ask one specific, challenging question at a time.
             3. Drill down into the specific achievements listed in their resume context.
             4. If they give a generic answer, ask for a specific metric or example.
-            5. Start immediately with a professional greeting and your first question.` }]
+            5.Start immediately with a professional greeting and your first question.
+            
+            CRITICAL: Do not speak English unless the candidate speaks English. Your output must be in ${language} script and language.`
+            }]
           }
         ]
       });
@@ -347,7 +385,7 @@ const LiveInterview: React.FC = () => {
       setStage('interview');
       drawVisualizer();
 
-      const startResult = await chatSession.sendMessage("Start the interview now.");
+      const startResult = await chatSession.sendMessage(`Start the interview now in ${language}.`);
       const text = startResult.response.text();
       setLiveAiText(text);
       setTranscripts(prev => [...prev, { role: 'ai', text }]);
@@ -368,7 +406,48 @@ const LiveInterview: React.FC = () => {
   const speakText = (text: string) => {
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = language === 'Hindi' ? 'hi-IN' : 'en-US';
+
+    const targetLangCode = LANGUAGE_CODES[language] || 'en-US';
+    utterance.lang = targetLangCode;
+
+    // Robust Voice Selection using state
+    let voice = voices.find(v => v.lang === targetLangCode);
+    if (!voice) voice = voices.find(v => v.lang.startsWith(targetLangCode.split('-')[0]));
+    if (!voice) voice = voices.find(v => v.name.includes(language));
+
+    // Fallback/Debug
+    if (voice) {
+      utterance.voice = voice;
+      setSelectedVoice(voice);
+      setDebugMsg(`Playing with: ${voice.name} (${voice.lang})`);
+    } else {
+      setDebugMsg(`No voice found for ${targetLangCode}. Using system default.`);
+      // Try to force English as absolute fallback if native not found, to avoid "French" sound on gibberish? 
+      // Actually, better to let it try native system default.
+      // Fallback/Debug
+      if (voice) {
+        utterance.voice = voice;
+        setSelectedVoice(voice);
+        setDebugMsg(`Playing with: ${voice.name} (${voice.lang})`);
+      } else {
+        // 4. Specific Fallback: Try Hindi voice for Indic languages (better than English default)
+        const INDIC_LANGS = ['bn-IN', 'te-IN', 'mr-IN', 'ta-IN', 'ur-IN', 'gu-IN', 'kn-IN', 'ml-IN', 'or-IN', 'pa-IN', 'as-IN', 'mai-IN', 'sat-IN', 'ks-IN', 'ne-NP', 'kok-IN', 'sd-IN', 'doi-IN', 'mni-IN', 'brx-IN', 'sa-IN', 'bho-IN'];
+
+        if (INDIC_LANGS.includes(targetLangCode)) {
+          const hindiVoice = voices.find(v => v.lang === 'hi-IN') || voices.find(v => v.lang.includes('hi'));
+          if (hindiVoice) {
+            utterance.voice = hindiVoice;
+            setSelectedVoice(hindiVoice);
+            setDebugMsg(`Fallback: Using Hindi voice (${hindiVoice.name}) for ${targetLangCode}`);
+          } else {
+            setDebugMsg(`No voice found for ${targetLangCode}. Using system default.`);
+          }
+        } else {
+          setDebugMsg(`No voice found for ${targetLangCode}. Using system default.`);
+        }
+      }
+    }
+
     utterance.onend = () => startListening();
     window.speechSynthesis.speak(utterance);
   };
@@ -382,7 +461,7 @@ const LiveInterview: React.FC = () => {
     const recognition = new window.webkitSpeechRecognition();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = language === 'Hindi' ? 'hi-IN' : 'en-US';
+    recognition.lang = LANGUAGE_CODES[language] || 'en-US';
 
     recognition.onresult = (event: any) => {
       let interimTranscript = '';
@@ -444,7 +523,7 @@ const LiveInterview: React.FC = () => {
       }
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
+        model: 'gemini-2.5-flash',
         generationConfig: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -640,6 +719,21 @@ const LiveInterview: React.FC = () => {
                   <p className="text-2xl md:text-3xl font-bold leading-tight italic text-slate-100 px-4">
                     {liveAiText ? `"${liveAiText}"` : liveUserText ? "You speaking..." : "Interviewer is analyzing..."}
                   </p>
+
+                  {/* Debug Info */}
+                  <div className="mt-4 p-4 bg-black/40 rounded-xl text-[10px] font-mono text-left text-green-400 overflow-hidden">
+                    <p className="font-bold border-b border-green-500/30 mb-2 pb-1">AUDIO DEBUGGER</p>
+                    <p>Target Lang: {LANGUAGE_CODES[language] || 'Unknown'} ({language})</p>
+                    <p>Found Voices: {voices.length}</p>
+                    <p>Active Voice: {selectedVoice ? `${selectedVoice.name} (${selectedVoice.lang})` : 'System Default'}</p>
+                    <p>Status: {debugMsg}</p>
+                    {voices.length === 0 && (
+                      <div className="mt-2 text-red-400">
+                        <p>WARNING: No voices detected.</p>
+                        <button onClick={() => setVoices(window.speechSynthesis.getVoices())} className="mt-1 px-2 py-1 bg-white/10 rounded uppercase text-[8px] hover:bg-white/20">Force Reload Voices</button>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <button onClick={stopAndFeedback} className="w-full py-6 bg-red-500/10 hover:bg-red-500 border border-red-500/20 text-red-500 hover:text-white rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-4 group">
