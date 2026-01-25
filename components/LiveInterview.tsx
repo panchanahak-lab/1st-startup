@@ -196,8 +196,12 @@ const LiveInterview: React.FC = () => {
       reader.onload = async () => {
         try {
           const base64 = (reader.result as string).split(',')[1];
-          const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
-          const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
+          const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+          if (!apiKey) {
+            throw new Error("API Key is missing. Please set VITE_GEMINI_API_KEY in your environment variables.");
+          }
+          const genAI = new GoogleGenerativeAI(apiKey);
+          const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
           const result = await model.generateContent([
             {
               inlineData: {
@@ -210,10 +214,11 @@ const LiveInterview: React.FC = () => {
           setResumeContext(result.response.text());
           setResumeFile(file);
           setStage('setup');
-        } catch (err) {
+        } catch (err: any) {
+          console.error("Resume parsing error:", err);
           setErrorDetail({
             type: 'PARSING',
-            message: "Neural parsing failed. You can still proceed, but the interviewer might not have full context.",
+            message: err.message?.includes("API Key") ? "API Key missing. Please configure your environment." : "Neural parsing failed. Please ensure the file is a valid PDF.",
             action: () => setStage('setup')
           });
           setResumeFile(file);
@@ -446,9 +451,13 @@ const sessionPromise = ai.live.connect({
     const history = transcripts.map(t => `${t.role.toUpperCase()}: ${t.text}`).join('\n');
     try {
       // const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY }); // REMOVED
-      const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY || '');
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (!apiKey) {
+        throw new Error("API Key is missing.");
+      }
+      const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-1.5-flash',
         generationConfig: {
           responseMimeType: "application/json",
           responseSchema: {
@@ -472,8 +481,9 @@ const sessionPromise = ai.live.connect({
 
       setFeedback(JSON.parse(res.response.text()));
       setStage('feedback');
-    } catch (err) {
-      setErrorDetail({ type: 'GENERIC', message: "Neural diagnostic failed. Our analysis servers are currently overwhelmed." });
+    } catch (err: any) {
+      console.error("Feedback generation error:", err);
+      setErrorDetail({ type: 'GENERIC', message: err.message?.includes("API Key") ? "API Key missing." : "Neural diagnostic failed. Our analysis servers are currently overwhelmed." });
       setStage('setup');
     }
   };
