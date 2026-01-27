@@ -26,10 +26,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // Listen for changes on auth state (logged in, signed out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      if (event === 'SIGNED_IN' && session?.user) {
+        // Initialize free credits for new users
+        await supabase
+          .from("subscriptions")
+          .upsert({
+            user_id: session.user.id,
+            ai_credits: 3
+          }, { onConflict: 'user_id', ignoreDuplicates: true });
+      }
     });
 
     return () => subscription.unsubscribe();
