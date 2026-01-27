@@ -878,17 +878,31 @@ const LiveInterview: React.FC = () => {
             <div className="bg-white text-navy-950 rounded-[2rem] p-8 md:p-12 max-w-lg w-full shadow-2xl relative overflow-hidden text-center transform transition-all scale-100">
               <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-brand-400 to-blue-600"></div>
               <div className="w-16 h-16 bg-brand-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-brand-600 text-3xl">
-                <i className="fas fa-crown"></i>
+                <i className="fas fa-rocket"></i>
               </div>
-              <h3 className="text-3xl font-black mb-4 tracking-tight">Premium Feature</h3>
-              <p className="text-slate-500 text-lg mb-8 font-medium">To continue practicing with unlimited AI interviews, please upgrade your plan. You've used your free credits.</p>
+              <h3 className="text-3xl font-black mb-6 tracking-tight">Premium feature coming soon!</h3>
+
+              <div className="text-left max-w-xs mx-auto space-y-4 mb-8">
+                <div className="flex items-center gap-4 text-slate-700 font-bold text-lg">
+                  <i className="fas fa-check-circle text-green-500 text-xl"></i> AI Interview feedback
+                </div>
+                <div className="flex items-center gap-4 text-slate-700 font-bold text-lg">
+                  <i className="fas fa-check-circle text-green-500 text-xl"></i> High-quality PDF export
+                </div>
+                <div className="flex items-center gap-4 text-slate-700 font-bold text-lg">
+                  <i className="fas fa-check-circle text-green-500 text-xl"></i> Resume improvement
+                </div>
+              </div>
+
+              <div className="bg-brand-500/10 p-4 rounded-xl border border-brand-500/20 mb-8 inline-block">
+                <p className="text-brand-600 font-black uppercase tracking-widest text-sm flex items-center gap-2">
+                  <i className="fas fa-gift animate-bounce"></i> Early users get FREE credits
+                </p>
+              </div>
 
               <div className="space-y-4">
-                <button onClick={() => window.location.href = '/settings'} className="w-full py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-black uppercase tracking-widest shadow-lg shadow-brand-500/30 transition-all hover:-translate-y-1">
-                  View Plans
-                </button>
-                <button onClick={() => setShowUpgradeModal(false)} className="w-full py-4 text-slate-400 hover:text-navy-900 font-bold uppercase tracking-widest text-xs transition-colors">
-                  Maybe Later
+                <button onClick={() => setShowUpgradeModal(false)} className="w-full py-4 bg-brand-500 hover:bg-brand-600 text-white rounded-xl font-black uppercase tracking-widest shadow-lg shadow-brand-500/30 transition-all hover:-translate-y-1">
+                  Got it!
                 </button>
               </div>
             </div>
