@@ -16,3 +16,12 @@ export async function addCredits(userId: string, credits: number) {
             ai_credits: newCredits
         });
 }
+
+export function requireCredits(
+    credits: number | null,
+    needed = 1
+) {
+    if (!credits || credits < needed) {
+        throw new Error("PREMIUM_LOCKED");
+    }
+}
