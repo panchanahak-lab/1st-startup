@@ -1,52 +1,24 @@
 // Pricing configuration for the application
 
-export interface PricingPlan {
-    id: string;
-    name: string;
-    price: number; // in INR
-    credits: number;
-    features: string[];
-}
-
-export const PRICING_PLANS: PricingPlan[] = [
-    {
-        id: 'free',
-        name: 'Free',
-        price: 0,
-        credits: 10,
-        features: [
-            'Basic resume builder',
-            '10 AI enhancements',
-            'PDF export',
-            'ATS checker'
-        ]
+export const PLANS = {
+    starter: {
+        name: "Starter",
+        price: 49,
+        credits: 3
     },
-    {
-        id: 'starter',
-        name: 'Starter',
+    popular: {
+        name: "Job Ready",
+        price: 99,
+        credits: 10
+    },
+    pro: {
+        name: "Pro",
         price: 199,
-        credits: 100,
-        features: [
-            'Everything in Free',
-            '100 AI enhancements',
-            'Priority support',
-            'Advanced templates'
-        ]
-    },
-    {
-        id: 'pro',
-        name: 'Professional',
-        price: 499,
-        credits: 500,
-        features: [
-            'Everything in Starter',
-            '500 AI enhancements',
-            'LinkedIn optimizer',
-            'Interview prep',
-            'Custom branding'
-        ]
+        credits: 25
     }
-];
+};
+
+export type PlanId = keyof typeof PLANS;
 
 // Credit costs for different features
 export const CREDIT_COSTS = {
@@ -58,11 +30,14 @@ export const CREDIT_COSTS = {
     INTERVIEW_PREP: 5
 } as const;
 
-export function getPlanById(planId: string): PricingPlan | undefined {
-    return PRICING_PLANS.find(plan => plan.id === planId);
+export function getPlanById(planId: string) {
+    return PLANS[planId as PlanId] ?? null;
 }
 
 export function calculateCreditsForAmount(amountInINR: number): number {
-    // Simple calculation: 1 credit per 2 INR
-    return Math.floor(amountInINR / 2);
+    // Find the best matching plan for the amount
+    if (amountInINR >= 199) return 25;
+    if (amountInINR >= 99) return 10;
+    if (amountInINR >= 49) return 3;
+    return 0;
 }
