@@ -37,7 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from("subscriptions")
           .upsert({
             user_id: session.user.id,
-            ai_credits: 3
+            ai_credits: 5
           }, { onConflict: 'user_id', ignoreDuplicates: true });
       }
     });
