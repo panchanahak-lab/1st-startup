@@ -25,7 +25,14 @@ export const verifyCredits = async (user: User | null, cost: number = 1): Promis
         });
 
         if (!res.ok) {
-            const data = await res.json();
+            let data;
+            try {
+                data = await res.json();
+            } catch (e) {
+                // If response is not JSON (e.g., 500 HTML page), throw generic error
+                throw new ToolAccessError(`Server Error (${res.status}): ${res.statusText}`, 'GENERIC');
+            }
+
             const code = res.status === 403 ? 'NO_CREDITS' :
                 res.status === 402 ? 'INSUFFICIENT_CREDITS' : 'GENERIC';
             throw new ToolAccessError(data.message || "Failed to verify credits", code);
