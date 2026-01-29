@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { getSiteUrl } from '../lib/config';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -26,7 +27,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode, onL
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${getSiteUrl()}/dashboard`,
         },
       });
       if (error) throw error;
@@ -42,7 +43,7 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode, onL
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'linkedin_oidc',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${getSiteUrl()}/dashboard`,
         },
       });
       if (error) throw error;
