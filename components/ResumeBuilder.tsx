@@ -3,6 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useLocation } from 'react-router-dom';
+import { verifyCredits, ToolAccessError } from '../lib/toolAccess';
+import { CREDIT_COSTS } from '../lib/pricing';
+import { useAuth } from '../lib/AuthContext';
 
 // --- TYPES ---
 
@@ -136,6 +139,7 @@ const ResumeBuilder: React.FC = () => {
     return clone(INITIAL_DATA);
   });
 
+  const { user } = useAuth();
   const [loadingBullet, setLoadingBullet] = useState<{ expId: number, index: number } | null>(null);
   const [activeSection, setActiveSection] = useState<string>('experience');
   const [activeTemplate, setActiveTemplate] = useState<TemplateType>('modern');
@@ -184,6 +188,8 @@ const ResumeBuilder: React.FC = () => {
 
     setLoadingBullet({ expId, index });
     try {
+      await verifyCredits(user, CREDIT_COSTS.AI_BULLET_ENHANCE);
+
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
         alert("Please set your valid VITE_GEMINI_API_KEY in environment variables (.env file).");
@@ -206,7 +212,11 @@ const ResumeBuilder: React.FC = () => {
       }
     } catch (e: any) {
       console.error("AI Enhancement Error:", e);
-      alert(`AI enhancement failed: ${e.message || JSON.stringify(e)}`);
+      if (e instanceof ToolAccessError) {
+        alert(e.message);
+      } else {
+        alert(`AI enhancement failed: ${e.message || JSON.stringify(e)}`);
+      }
     } finally { setLoadingBullet(null); }
   };
 

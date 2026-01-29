@@ -1,6 +1,9 @@
 
 import React, { useState, useRef } from 'react';
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { verifyCredits, ToolAccessError } from '../lib/toolAccess';
+import { CREDIT_COSTS } from '../lib/pricing';
+import { useAuth } from '../lib/AuthContext';
 
 interface ATSCheckerProps {
   isLoggedIn: boolean;
@@ -27,6 +30,7 @@ interface AnalysisResult {
 }
 
 const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
+  const { user } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState('');
   const [status, setStatus] = useState<'idle' | 'analyzing' | 'complete' | 'error'>('idle');
@@ -36,6 +40,14 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
   const startAnalysis = async () => {
     if (!file) return;
     setStatus('analyzing');
+
+    try {
+      await verifyCredits(user, CREDIT_COSTS.ATS_CHECK);
+    } catch (e: any) {
+      setStatus('idle');
+      alert(e.message);
+      return;
+    }
 
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) {

@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const { userId } = req.body;
+        const { userId, cost = 1 } = req.body;
 
         if (!userId) {
             return res.status(400).json({ error: 'User ID is required' });
@@ -28,14 +28,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             .eq("user_id", userId)
             .single();
 
-        if (!data || data.ai_credits <= 0) {
-            return res.status(402).json({
-                locked: true,
-                message: "Premium feature – coming soon"
+        const userCredits = data?.ai_credits || 0;
+
+        if (userCredits <= 0) {
+            return res.status(403).json({
+                error: "NO_CREDITS",
+                message: "You have 0 credits. Please upgrade or wait for daily reset."
             });
         }
 
-        return res.status(200).json({ success: true });
+        if (userCredits < cost) {
+            return res.status(402).json({
+                error: "INSUFFICIENT_CREDITS",
+                message: `This action requires ${cost} credits, but you only have ${userCredits}.`
+            });
+        }
+
+        return res.status(200).json({ success: true, remaining: userCredits });
 
     } catch (error: any) {
         console.error('Check credits error:', error);
