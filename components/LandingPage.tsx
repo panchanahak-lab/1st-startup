@@ -19,7 +19,7 @@ import DesktopRecommendation from './DesktopRecommendation';
 
 import BackToTop from './BackToTop';
 import { useAuth } from '../lib/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const LandingPage: React.FC = () => {
     const [theme, setTheme] = useState<'light' | 'dark'>('light');
@@ -29,15 +29,21 @@ const LandingPage: React.FC = () => {
 
     const { user } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
-    // Redirect to dashboard if already logged in
-    // Redirect logic removed to allow users to view the landing page
-    // Redirect to dashboard if already logged in
+    // Scroll to section based on hash when landing page loads or hash changes
     useEffect(() => {
-        if (user) {
-            navigate('/dashboard');
+        if (location.hash) {
+            const id = location.hash.replace('#', '');
+            const element = document.getElementById(id);
+            if (element) {
+                // Short delay to ensure sections are rendered
+                setTimeout(() => {
+                    element.scrollIntoView({ behavior: 'smooth' });
+                }, 100);
+            }
         }
-    }, [user, navigate]);
+    }, [location]);
 
     // Initial Onboarding Logic
     useEffect(() => {
