@@ -12,23 +12,6 @@
     href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✨</text></svg>">
 
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- GLOBAL ERROR TRAP: Catches errors before React loads -->
-  <script>
-    window.onerror = function(message, source, lineno, colno, error) {
-      document.body.innerHTML = '<div style="background:#0f172a;color:#fff;padding:2rem;font-family:monospace;min-height:100vh;">' +
-        '<h1 style="color:#ef4444;font-size:2rem;margin-bottom:1rem;">Fatal Error (Pre-React)</h1>' +
-        '<p style="color:#f8fafc;margin-bottom:1rem;font-size:1.2rem;">' + message + '</p>' +
-        '<p style="color:#94a3b8;">Source: ' + source + ':' + lineno + ':' + colno + '</p>' +
-        '<pre style="background:#1e293b;padding:1rem;margin-top:1rem;border-radius:0.5rem;overflow:auto;color:#cbd5e1;">' + (error ? error.stack : 'No stack trace') + '</pre>' +
-        '</div>';
-    };
-    window.addEventListener('unhandledrejection', function(event) {
-       document.body.innerHTML = '<div style="background:#0f172a;color:#fff;padding:2rem;font-family:monospace;min-height:100vh;">' +
-        '<h1 style="color:#f59e0b;font-size:2rem;margin-bottom:1rem;">Unhandled Promise Rejection</h1>' +
-        '<pre style="background:#1e293b;padding:1rem;margin-top:1rem;border-radius:0.5rem;overflow:auto;color:#cbd5e1;">' + event.reason + '</pre>' +
-        '</div>';
-    });
-  </script>
   <script>
     tailwind.config = {
       darkMode: 'class',

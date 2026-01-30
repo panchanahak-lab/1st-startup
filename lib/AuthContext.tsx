@@ -22,6 +22,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
+    }).catch((error) => {
+      console.warn("Auth session check failed (non-critical):", error);
+    }).finally(() => {
       setLoading(false);
     });
 
