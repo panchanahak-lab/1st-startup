@@ -45,7 +45,14 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
       await verifyCredits(user, CREDIT_COSTS.ATS_CHECK);
     } catch (e: any) {
       setStatus('idle');
-      alert(e.message);
+      console.error("Credit check failed:", e);
+
+      if (e.code === 'NO_CREDITS' || e.code === 'INSUFFICIENT_CREDITS') {
+        // TODO: ideally show a Premium Modal here
+        alert(`You need more credits to use this feature. ${e.message}`);
+      } else {
+        alert(e.message || "An unexpected error occurred while checking credits.");
+      }
       return;
     }
 

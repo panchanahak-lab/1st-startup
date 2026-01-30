@@ -24,10 +24,13 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode, onL
     try {
       setError(null);
       const { supabase } = await import('../lib/supabaseClient');
+      const redirectTo = `${getSiteUrl()}/dashboard`;
+      console.log('[Auth] Signing in with Google, redirecting to:', redirectTo);
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${getSiteUrl()}/dashboard`,
+          redirectTo,
         },
       });
       if (error) throw error;
