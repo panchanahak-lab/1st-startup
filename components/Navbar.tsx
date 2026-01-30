@@ -120,7 +120,12 @@ const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme, onOpenAuth }) => 
                     Account
                   </Link>
                   <button
-                    onClick={() => { signOut(); navigate('/'); }}
+                    onClick={async () => {
+                      await signOut();
+                      navigate('/');
+                      // Force reload to ensure clean state if needed
+                      window.location.reload();
+                    }}
                     className="btn-shimmer bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white px-4 lg:px-6 py-2.5 lg:py-3 rounded-xl font-bold shadow-md transition-transform hover:scale-105 active:scale-95 text-sm lg:text-base"
                   >
                     Sign Out
@@ -205,7 +210,12 @@ const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme, onOpenAuth }) => 
             <div className="p-6 border-t border-slate-100 dark:border-white/5 space-y-4 bg-slate-50/50 dark:bg-navy-900/50">
               {user ? (
                 <button
-                  onClick={() => { signOut(); setIsOpen(false); navigate('/'); }}
+                  onClick={async () => {
+                    await signOut();
+                    setIsOpen(false);
+                    navigate('/');
+                    window.location.reload();
+                  }}
                   className="w-full py-4 bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-white rounded-xl font-bold shadow-lg transition-all active:scale-95"
                 >
                   Sign Out
