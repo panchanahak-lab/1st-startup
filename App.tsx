@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './lib/AuthContext';
 import LandingPage from './components/LandingPage';
+import AuthCallback from './components/AuthCallback';
 import Dashboard from './components/Dashboard';
 import Resumes from './components/Resumes';
 import Settings from './components/Settings';
@@ -13,6 +14,7 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/resumes" element={<Resumes />} />
