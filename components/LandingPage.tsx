@@ -32,11 +32,12 @@ const LandingPage: React.FC = () => {
 
     // Redirect to dashboard if already logged in
     // Redirect logic removed to allow users to view the landing page
-    // useEffect(() => {
-    //     if (user) {
-    //         navigate('/dashboard');
-    //     }
-    // }, [user, navigate]);
+    // Redirect to dashboard if already logged in
+    useEffect(() => {
+        if (user) {
+            navigate('/dashboard');
+        }
+    }, [user, navigate]);
 
     // Initial Onboarding Logic
     useEffect(() => {
