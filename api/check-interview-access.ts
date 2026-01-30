@@ -41,6 +41,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     } catch (error: any) {
         console.error('Check interview access error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({
+            error: error.message || "Unknown error",
+            details: JSON.stringify(error, Object.getOwnPropertyNames(error)),
+            stack: error.stack,
+            envCheck: {
+                hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+                hasUrl: !!process.env.SUPABASE_URL || !!process.env.VITE_SUPABASE_URL
+            }
+        });
     }
 }
