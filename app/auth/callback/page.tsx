@@ -6,26 +6,29 @@ export default function AuthCallback() {
     const navigate = useNavigate()
 
     useEffect(() => {
-        const finalizeLogin = async () => {
-            // Using getSessionFromUrl as requested
-            const { data, error } = await supabase.auth.getSessionFromUrl({
-                storeSession: true,
-            })
+        let redirected = false
 
-            if (error) {
-                console.error('OAuth error:', error)
-                navigate('/', { replace: true }) // Redirect to home on error
-                return
-            }
-
-            if (data?.session) {
+        // 1️⃣ Listen for auth state change (CRITICAL)
+        const {
+            data: { subscription },
+        } = supabase.auth.onAuthStateChange((event, session) => {
+            if (session && !redirected) {
+                redirected = true
                 navigate('/dashboard', { replace: true })
-            } else {
-                navigate('/', { replace: true }) // Redirect to home if no session
             }
-        }
+        })
 
-        finalizeLogin()
+        // 2️⃣ Fallback check (in case event already fired)
+        supabase.auth.getSession().then(({ data }) => {
+            if (data.session && !redirected) {
+                redirected = true
+                navigate('/dashboard', { replace: true })
+            }
+        })
+
+        return () => {
+            subscription.unsubscribe()
+        }
     }, [navigate])
 
     return <p style={{ textAlign: 'center' }}>Finalizing Sign In…</p>
