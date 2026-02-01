@@ -14,26 +14,33 @@ if (!supabaseServiceKey) {
   console.warn('Warning: SUPABASE_SERVICE_ROLE_KEY is not set. Server-side operations will fail.');
 }
 
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
+export const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+  ? createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  })
+  : null;
 
 // Helper to get user from Authorization header
 export async function getUserFromToken(authHeader: string | null) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return null;
   }
-  
+
   const token = authHeader.replace('Bearer ', '');
-  
+
+  if (!supabaseAdmin) {
+    console.error('Supabase Admin client not initialized');
+    return null;
+  }
+
   const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
-  
+
   if (error || !user) {
     return null;
   }
-  
+
   return user;
 }

@@ -23,6 +23,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
         // Ignored req.body.userId -> Using authenticated user.id instead
 
+        if (!supabaseAdmin) {
+            return res.status(500).json({ error: 'Server misconfigured: Missing Supabase Admin Key' });
+        }
+
         const { data } = await supabaseAdmin
             .from("subscriptions")
             .select("ai_credits")
