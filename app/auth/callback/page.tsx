@@ -6,29 +6,24 @@ export default function AuthCallback() {
     const navigate = useNavigate()
 
     useEffect(() => {
-        const finishAuth = async () => {
-            // This FINALIZES Google login
-            const { data, error } = await supabase.auth.getSession()
+        const finalize = async () => {
+            // ✅ CRITICAL LINE (as requested by user)
+            // Extracts the code from the URL and exchanges it for a session
+            const { error } = await supabase.auth.exchangeCodeForSession(
+                window.location.href
+            )
 
             if (error) {
-                console.error('Auth error:', error)
+                console.error('OAuth error:', error.message)
                 navigate('/', { replace: true })
                 return
             }
 
-            if (data?.session) {
-                navigate('/dashboard', { replace: true }) // or homepage
-            } else {
-                navigate('/', { replace: true })
-            }
+            navigate('/dashboard', { replace: true })
         }
 
-        finishAuth()
+        finalize()
     }, [navigate])
 
-    return (
-        <div style={{ textAlign: 'center', marginTop: '40vh' }}>
-            <h3>Finalizing Sign In…</h3>
-        </div>
-    )
+    return <p style={{ textAlign: 'center' }}>Finalizing Sign In…</p>
 }
