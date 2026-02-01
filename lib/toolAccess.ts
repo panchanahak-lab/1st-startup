@@ -31,8 +31,12 @@ export const verifyCredits = async (session: Session | null, cost: number = 1): 
             try {
                 data = await res.json();
             } catch (e) {
-                // If response is not JSON (e.g., 500 HTML page), throw generic error
-                throw new ToolAccessError(`Server Error (${res.status}): ${res.statusText}`, 'GENERIC');
+                // Response is not JSON (likely 500 HTML from Vercel crash)
+                const text = await res.text();
+                console.error("Non-JSON API Response:", text);
+                const match = text.match(/<pre>(.*?)<\/pre>/s) || text.match(/<title>(.*?)<\/title>/);
+                const errorSnippet = match ? match[1] : text.substring(0, 100);
+                throw new ToolAccessError(`Server Error (${res.status}): ${errorSnippet}`, 'GENERIC');
             }
 
             const code = res.status === 403 ? 'NO_CREDITS' :
