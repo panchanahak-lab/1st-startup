@@ -24,8 +24,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode, onL
     try {
       setError(null);
       const { supabase } = await import('../lib/supabaseClient');
-      // Using hardcoded URL as per user request to ensure production redirect works
-      const redirectTo = "https://1st-startup.vercel.app/auth/callback";
+      // Dynamic redirect URL for both local and production
+      const redirectTo = `${window.location.origin}/auth/callback`;
       console.log('[Auth] Signing in with Google, redirecting to:', redirectTo);
 
       const { error } = await supabase.auth.signInWithOAuth({
