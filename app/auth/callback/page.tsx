@@ -27,6 +27,8 @@ export default function AuthCallback() {
 
                 // Manual Hash Parsing
                 const hash = window.location.hash
+                setDebugStatus(`Checking Hash: ${hash ? 'Present' : 'Empty'} (${hash.length} chars)`)
+
                 if (hash && hash.includes('access_token')) {
                     setDebugStatus("Hash found. Parsing tokens...")
                     try {
@@ -42,22 +44,28 @@ export default function AuthCallback() {
                                 refresh_token: refresh_token || '',
                             })
 
-                            if (error) throw error
-
                             if (data.session) {
                                 setDebugStatus("Session manually set. Redirecting...")
                                 navigate('/dashboard', { replace: true })
                                 return
                             }
+                            if (error) {
+                                console.error("setSession error:", error)
+                                setDebugStatus(`SetSession Error: ${error.message}`)
+                            }
+                        } else {
+                            setDebugStatus("Access Token missing in hash parameters")
                         }
                     } catch (e: any) {
                         setDebugStatus(`Manual setSession failed: ${e.message}`)
                         console.error("Manual Auth Error:", e)
                     }
+                } else {
+                    setDebugStatus("No access_token found in hash")
                 }
 
                 // If manual parsing failed or no hash, try standard getSession one last time
-                setDebugStatus("Trying standard getSession...")
+                setDebugStatus(prev => `${prev} -> Trying standard getSession...`)
                 const { data: { session: urlSession }, error } = await supabase.auth.getSession()
                 if (urlSession) {
                     setDebugStatus("Hash session recovered. Redirecting...")
