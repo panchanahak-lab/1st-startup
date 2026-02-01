@@ -16,80 +16,26 @@ export default function AuthCallback() {
         if (session) {
             setDebugStatus("Session found. Redirecting...")
             // Small delay to ensure state is stable
+            setDebugStatus("Session detected. Redirecting...")
             const timer = setTimeout(() => {
                 navigate('/dashboard', { replace: true })
-            }, 100)
+            }, 500) // Increased delay to ensure auth state propagation
             return () => clearTimeout(timer)
         }
 
+        // Allow Supabase to detect session automatically
         if (!loading && !session) {
-            if (processingRef.current) return;
-            processingRef.current = true;
-
-            // Fallback: Manually check URL for hash if context missed it (race condition)
-            const handleHash = async () => {
-                setDebugStatus("Checking URL hash...")
-
-                // Manual Hash Parsing
-                const hash = window.location.hash
-                setDebugStatus(`Checking Hash: ${hash ? 'Present' : 'Empty'} (${hash.length} chars)`)
-
-                if (hash && hash.includes('access_token')) {
-                    setDebugStatus("Hash found. Parsing tokens...")
-                    try {
-                        // Extract tokens from hash
-                        const params = new URLSearchParams(hash.substring(1)) // remove #
-                        const access_token = params.get('access_token')
-                        const refresh_token = params.get('refresh_token')
-
-                        if (access_token) {
-                            setDebugStatus("Tokens extracted. Setting session...")
-                            const { data, error } = await supabase.auth.setSession({
-                                access_token,
-                                refresh_token: refresh_token || '',
-                            })
-
-                            if (data.session) {
-                                setDebugStatus("Session manually set. Redirecting...")
-                                navigate('/dashboard', { replace: true })
-                                return
-                            }
-                            if (error) {
-                                console.error("setSession error:", error)
-                                setDebugStatus(`SetSession Error: ${error.message}`)
-                                processingRef.current = false; // Allow retry if failed
-                            }
-                        } else {
-                            setDebugStatus("Access Token missing in hash parameters")
-                            processingRef.current = false;
-                        }
-                    } catch (e: any) {
-                        setDebugStatus(`Manual setSession failed: ${e.message}`)
-                        console.error("Manual Auth Error:", e)
-                        processingRef.current = false;
-                    }
-                } else {
-                    setDebugStatus("No access_token found in hash")
-                    processingRef.current = false;
+            setDebugStatus("Waiting for Supabase to detect session...")
+            // Poll for session just in case
+            const interval = setInterval(async () => {
+                const { data } = await supabase.auth.getSession()
+                if (data.session) {
+                    setDebugStatus("Session recovered via polling. Redirecting...")
+                    navigate('/dashboard', { replace: true })
+                    clearInterval(interval)
                 }
-
-                // If manual parsing failed or no hash, try standard getSession one last time
-                setDebugStatus(prev => `${prev} -> Trying standard getSession...`)
-                try {
-                    const { data: { session: urlSession }, error } = await supabase.auth.getSession()
-                    if (urlSession) {
-                        setDebugStatus("Hash session recovered. Redirecting...")
-                        navigate('/dashboard', { replace: true })
-                    } else {
-                        setDebugStatus("Auth failed. No session found. Please try again.")
-                        console.error("Auth Callback failed:", error)
-                        // setTimeout(() => navigate('/?error=auth_failed'), 3000) // Keep user on page to see error
-                    }
-                } catch (e) {
-                    console.error("final check failed", e)
-                }
-            }
-            handleHash()
+            }, 1000)
+            return () => clearInterval(interval)
         }
     }, [session, loading, navigate])
 
