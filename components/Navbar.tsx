@@ -63,7 +63,7 @@ const Navbar: React.FC<NavbarProps> = ({ theme, onToggleTheme, onOpenAuth }) => 
   };
 
   return (
-    <nav className="fixed w-full z-[60] bg-white/90 dark:bg-navy-950/90 backdrop-blur-md border-b border-slate-200 dark:border-white/5 shadow-sm transition-all duration-300">
+    <nav className="fixed w-full z-[2000] bg-white/90 dark:bg-navy-950/90 backdrop-blur-md border-b border-slate-200 dark:border-white/5 shadow-sm transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16 md:h-20">
           {/* Logo */}
