@@ -24,6 +24,40 @@ export default function AuthCallback() {
             // Fallback: Manually check URL for hash if context missed it (race condition)
             const handleHash = async () => {
                 setDebugStatus("Checking URL hash...")
+
+                // Manual Hash Parsing
+                const hash = window.location.hash
+                if (hash && hash.includes('access_token')) {
+                    setDebugStatus("Hash found. Parsing tokens...")
+                    try {
+                        // Extract tokens from hash
+                        const params = new URLSearchParams(hash.substring(1)) // remove #
+                        const access_token = params.get('access_token')
+                        const refresh_token = params.get('refresh_token')
+
+                        if (access_token) {
+                            setDebugStatus("Tokens extracted. Setting session...")
+                            const { data, error } = await supabase.auth.setSession({
+                                access_token,
+                                refresh_token: refresh_token || '',
+                            })
+
+                            if (error) throw error
+
+                            if (data.session) {
+                                setDebugStatus("Session manually set. Redirecting...")
+                                navigate('/dashboard', { replace: true })
+                                return
+                            }
+                        }
+                    } catch (e: any) {
+                        setDebugStatus(`Manual setSession failed: ${e.message}`)
+                        console.error("Manual Auth Error:", e)
+                    }
+                }
+
+                // If manual parsing failed or no hash, try standard getSession one last time
+                setDebugStatus("Trying standard getSession...")
                 const { data: { session: urlSession }, error } = await supabase.auth.getSession()
                 if (urlSession) {
                     setDebugStatus("Hash session recovered. Redirecting...")
@@ -31,7 +65,6 @@ export default function AuthCallback() {
                 } else {
                     setDebugStatus("Auth failed. No session found. Please try again.")
                     console.error("Auth Callback failed:", error)
-                    // Optional: redirect to login after a timeout
                     setTimeout(() => navigate('/?error=auth_failed'), 3000)
                 }
             }
