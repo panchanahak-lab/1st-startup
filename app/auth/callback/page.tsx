@@ -6,23 +6,26 @@ export default function AuthCallback() {
     const navigate = useNavigate()
 
     useEffect(() => {
-        const finalize = async () => {
-            // ✅ CRITICAL LINE (as requested by user)
-            // Extracts the code from the URL and exchanges it for a session
-            const { error } = await supabase.auth.exchangeCodeForSession(
-                window.location.href
-            )
+        const finalizeLogin = async () => {
+            // Using getSessionFromUrl as requested
+            const { data, error } = await supabase.auth.getSessionFromUrl({
+                storeSession: true,
+            })
 
             if (error) {
-                console.error('OAuth error:', error.message)
-                navigate('/', { replace: true })
+                console.error('OAuth error:', error)
+                navigate('/', { replace: true }) // Redirect to home on error
                 return
             }
 
-            navigate('/dashboard', { replace: true })
+            if (data?.session) {
+                navigate('/dashboard', { replace: true })
+            } else {
+                navigate('/', { replace: true }) // Redirect to home if no session
+            }
         }
 
-        finalize()
+        finalizeLogin()
     }, [navigate])
 
     return <p style={{ textAlign: 'center' }}>Finalizing Sign In…</p>
