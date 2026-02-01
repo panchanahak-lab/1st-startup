@@ -1,6 +1,34 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getUserFromToken } from "./_shared";
+import { createClient } from '@supabase/supabase-js';
+
+// --- Shared Logic Inlined ---
+const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+const supabaseAdmin = (supabaseUrl && supabaseServiceKey)
+    ? createClient(supabaseUrl, supabaseServiceKey, {
+        auth: {
+            autoRefreshToken: false,
+            persistSession: false
+        }
+    })
+    : null;
+
+async function getUserFromToken(authHeader: string | null) {
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return null;
+    }
+    const token = authHeader.replace('Bearer ', '');
+    if (!supabaseAdmin) {
+        console.error('Supabase Admin client not initialized');
+        return null;
+    }
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    if (error || !user) return null;
+    return user;
+}
+// -----------------------------
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Enable CORS
