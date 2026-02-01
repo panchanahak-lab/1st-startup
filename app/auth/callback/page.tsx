@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../lib/AuthContext'
 import { supabase } from '../../../lib/supabaseClient'
@@ -7,6 +7,8 @@ export default function AuthCallback() {
     const navigate = useNavigate()
     const { session, loading } = useAuth()
     const [debugStatus, setDebugStatus] = useState("Initializing...")
+
+    const processingRef = useRef(false)
 
     useEffect(() => {
         setDebugStatus(`Session: ${!!session}, Loading: ${loading}`)
@@ -21,6 +23,9 @@ export default function AuthCallback() {
         }
 
         if (!loading && !session) {
+            if (processingRef.current) return;
+            processingRef.current = true;
+
             // Fallback: Manually check URL for hash if context missed it (race condition)
             const handleHash = async () => {
                 setDebugStatus("Checking URL hash...")
@@ -52,28 +57,36 @@ export default function AuthCallback() {
                             if (error) {
                                 console.error("setSession error:", error)
                                 setDebugStatus(`SetSession Error: ${error.message}`)
+                                processingRef.current = false; // Allow retry if failed
                             }
                         } else {
                             setDebugStatus("Access Token missing in hash parameters")
+                            processingRef.current = false;
                         }
                     } catch (e: any) {
                         setDebugStatus(`Manual setSession failed: ${e.message}`)
                         console.error("Manual Auth Error:", e)
+                        processingRef.current = false;
                     }
                 } else {
                     setDebugStatus("No access_token found in hash")
+                    processingRef.current = false;
                 }
 
                 // If manual parsing failed or no hash, try standard getSession one last time
                 setDebugStatus(prev => `${prev} -> Trying standard getSession...`)
-                const { data: { session: urlSession }, error } = await supabase.auth.getSession()
-                if (urlSession) {
-                    setDebugStatus("Hash session recovered. Redirecting...")
-                    navigate('/dashboard', { replace: true })
-                } else {
-                    setDebugStatus("Auth failed. No session found. Please try again.")
-                    console.error("Auth Callback failed:", error)
-                    setTimeout(() => navigate('/?error=auth_failed'), 3000)
+                try {
+                    const { data: { session: urlSession }, error } = await supabase.auth.getSession()
+                    if (urlSession) {
+                        setDebugStatus("Hash session recovered. Redirecting...")
+                        navigate('/dashboard', { replace: true })
+                    } else {
+                        setDebugStatus("Auth failed. No session found. Please try again.")
+                        console.error("Auth Callback failed:", error)
+                        // setTimeout(() => navigate('/?error=auth_failed'), 3000) // Keep user on page to see error
+                    }
+                } catch (e) {
+                    console.error("final check failed", e)
                 }
             }
             handleHash()
