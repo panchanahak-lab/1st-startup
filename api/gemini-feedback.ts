@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getUserFromToken } from '../lib/supabaseServer';
+import { getUserFromToken } from "./_shared";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Only allow POST requests
