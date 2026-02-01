@@ -21,27 +21,51 @@ export default function AuthCallback() {
             // 2. Explicitly check session from Supabase client
             const { data: { session }, error } = await supabase.auth.getSession();
 
-            if (error) {
-                console.error("AuthCallback error:", error);
-                navigate("/");
-                return;
-            }
-
             if (session) {
                 console.log("AuthCallback: Session found explicitly, redirecting...");
                 navigate("/dashboard");
-            } else {
-                console.log("AuthCallback: No session found yet, waiting for listener...");
+                return;
+            }
+
+            // 3. Fallback: Manually parse hash if Supabase detection failed
+            const hash = window.location.hash;
+            if (hash && hash.includes("access_token")) {
+                console.log("AuthCallback: Found access_token in hash, attempting manual set...");
+                try {
+                    // Simple parser for hash fragment
+                    const params = new URLSearchParams(hash.substring(1)); // remove leading #
+                    const accessToken = params.get("access_token");
+                    const refreshToken = params.get("refresh_token");
+
+                    if (accessToken && refreshToken) {
+                        const { data, error: setSessionError } = await supabase.auth.setSession({
+                            access_token: accessToken,
+                            refresh_token: refreshToken,
+                        });
+
+                        if (!setSessionError && data.session) {
+                            console.log("AuthCallback: Session set manually success!");
+                            navigate("/dashboard");
+                            return;
+                        } else {
+                            console.error("AuthCallback: Manual session set failed", setSessionError);
+                        }
+                    }
+                } catch (e) {
+                    console.error("AuthCallback: Error parsing hash", e);
+                }
+            } else if (error) {
+                console.error("AuthCallback error:", error);
             }
         };
 
         handleAuth();
 
-        // 3. Safety timeout - if nothing happens within 5 seconds
+        // 4. Safety timeout - if nothing happens within 8 seconds
         const timer = setTimeout(() => {
             console.warn("AuthCallback: Timeout reached. Redirecting to home.");
             navigate("/");
-        }, 5000);
+        }, 8000);
 
         return () => clearTimeout(timer);
     }, [user, navigate]);
