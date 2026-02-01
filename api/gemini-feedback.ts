@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getUserFromToken } from '../lib/supabaseServer';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Only allow POST requests
@@ -17,6 +18,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
+        const user = await getUserFromToken(req.headers.authorization || null);
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
+
         const { prompt, context, type = 'general' } = req.body;
 
         if (!prompt) {

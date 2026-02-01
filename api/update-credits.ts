@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../lib/supabaseServer';
+import { supabaseAdmin, getUserFromToken } from '../lib/supabaseServer';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS handling
@@ -16,10 +16,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const { userId, credits } = req.body;
+        const user = await getUserFromToken(req.headers.authorization || null);
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
+        }
 
-        if (!userId || credits === undefined) {
-            return res.status(400).json({ error: 'Missing userId or credits' });
+        const { credits } = req.body;
+
+        if (credits === undefined) {
+            return res.status(400).json({ error: 'Missing credits' });
         }
 
         // SECURITY WARNING: This endpoint allows setting arbitrary credits.
@@ -29,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const { error } = await supabaseAdmin
             .from("subscriptions")
             .update({ ai_credits: credits })
-            .eq("user_id", userId);
+            .eq("user_id", user.id);
 
         if (error) throw error;
 

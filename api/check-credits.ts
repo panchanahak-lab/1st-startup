@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { supabaseAdmin } from '../lib/supabaseServer';
+import { supabaseAdmin, getUserFromToken } from '../lib/supabaseServer';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     // CORS handling
@@ -16,16 +16,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-        const { userId, cost = 1 } = req.body;
-
-        if (!userId) {
-            return res.status(400).json({ error: 'User ID is required' });
+        const user = await getUserFromToken(req.headers.authorization || null);
+        if (!user) {
+            return res.status(401).json({ error: 'Not authenticated' });
         }
+
+        const { cost = 1 } = req.body;
+        // Ignored req.body.userId -> Using authenticated user.id instead
 
         const { data } = await supabaseAdmin
             .from("subscriptions")
             .select("ai_credits")
-            .eq("user_id", userId)
+            .eq("user_id", user.id)
             .single();
 
         const userCredits = data?.ai_credits || 0;
