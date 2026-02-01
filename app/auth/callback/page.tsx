@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../lib/AuthContext";
-import { supabase } from "../lib/supabaseClient";
+import { useAuth } from "../../../lib/AuthContext";
+import { supabase } from "../../../lib/supabaseClient";
 
 export default function AuthCallback() {
     const { user } = useAuth();

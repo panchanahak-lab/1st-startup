@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './lib/AuthContext';
 import LandingPage from './components/LandingPage';
-import AuthCallback from './components/AuthCallback';
+import AuthCallback from './app/auth/callback/page';
 import Dashboard from './components/Dashboard';
 import Resumes from './components/Resumes';
 import Settings from './components/Settings';
