@@ -170,7 +170,7 @@ interface ErrorDetail {
 }
 
 const LiveInterview: React.FC = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [stage, setStage] = useState<SessionStage>('setup');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
@@ -328,7 +328,7 @@ const LiveInterview: React.FC = () => {
 
     if (user?.id) {
       try {
-        await verifyCredits(user, CREDIT_COSTS.INTERVIEW_PREP);
+        await verifyCredits(session, CREDIT_COSTS.INTERVIEW_PREP);
       } catch (e: any) {
         if (e instanceof ToolAccessError && (e.code === 'NO_CREDITS' || e.code === 'INSUFFICIENT_CREDITS')) {
           setShowUpgradeModal(true);

@@ -1,5 +1,4 @@
-
-import { User } from '@supabase/supabase-js';
+import { Session } from '@supabase/supabase-js';
 
 export class ToolAccessError extends Error {
     code: 'NO_CREDITS' | 'INSUFFICIENT_CREDITS' | 'GENERIC';
@@ -11,8 +10,8 @@ export class ToolAccessError extends Error {
     }
 }
 
-export const verifyCredits = async (user: User | null, cost: number = 1): Promise<void> => {
-    if (!user) {
+export const verifyCredits = async (session: Session | null, cost: number = 1): Promise<void> => {
+    if (!session || !session.user) {
         // Optionally handle not logged in case here or let caller handle it
         throw new ToolAccessError("Please sign in to use this feature.", 'GENERIC');
     }
@@ -20,8 +19,11 @@ export const verifyCredits = async (user: User | null, cost: number = 1): Promis
     try {
         const res = await fetch('/api/check-credits', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: user.id, cost })
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ cost }) // userId is now inferred from token
         });
 
         if (!res.ok) {

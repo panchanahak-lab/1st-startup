@@ -30,7 +30,7 @@ interface AnalysisResult {
 }
 
 const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [file, setFile] = useState<File | null>(null);
   const [jobDescription, setJobDescription] = useState('');
   const [status, setStatus] = useState<'idle' | 'analyzing' | 'complete' | 'error'>('idle');
@@ -42,7 +42,7 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
     setStatus('analyzing');
 
     try {
-      await verifyCredits(user, CREDIT_COSTS.ATS_CHECK);
+      await verifyCredits(session, CREDIT_COSTS.ATS_CHECK);
     } catch (e: any) {
       setStatus('idle');
       console.error("Credit check failed:", e);

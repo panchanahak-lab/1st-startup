@@ -139,7 +139,7 @@ const ResumeBuilder: React.FC = () => {
     return clone(INITIAL_DATA);
   });
 
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [loadingBullet, setLoadingBullet] = useState<{ expId: number, index: number } | null>(null);
   const [activeSection, setActiveSection] = useState<string>('experience');
   const [activeTemplate, setActiveTemplate] = useState<TemplateType>('modern');
@@ -188,7 +188,7 @@ const ResumeBuilder: React.FC = () => {
 
     setLoadingBullet({ expId, index });
     try {
-      await verifyCredits(user, CREDIT_COSTS.AI_BULLET_ENHANCE);
+      await verifyCredits(session, CREDIT_COSTS.AI_BULLET_ENHANCE);
 
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey || apiKey === 'YOUR_GEMINI_API_KEY_HERE') {
