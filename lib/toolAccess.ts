@@ -27,12 +27,12 @@ export const verifyCredits = async (session: Session | null, cost: number = 1): 
         });
 
         if (!res.ok) {
+            const text = await res.text();
             let data;
             try {
-                data = await res.json();
+                data = JSON.parse(text);
             } catch (e) {
-                // Response is not JSON (likely 500 HTML from Vercel crash)
-                const text = await res.text();
+                // Response is not JSON (likely 500 HTML)
                 console.error("Non-JSON API Response:", text);
                 const match = text.match(/<pre>(.*?)<\/pre>/s) || text.match(/<title>(.*?)<\/title>/);
                 const errorSnippet = match ? match[1] : text.substring(0, 100);
