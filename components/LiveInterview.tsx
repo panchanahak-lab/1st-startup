@@ -1,62 +1,34 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { useAuth } from '../lib/AuthContext';
 import { verifyCredits, ToolAccessError } from '../lib/toolAccess';
 import { CREDIT_COSTS } from '../lib/pricing';
+import {
+  InterviewStage,
+  InterviewSession,
+  createInterviewSession,
+  getCurrentQuestion,
+  recordAnswer,
+  isInterviewComplete,
+  thinkingDelay,
+  getOpeningGreeting,
+  getTransitionPhrase,
+  formatQuestionNaturally,
+  buildFeedbackPrompt
+} from '../lib/interviewEngine';
 
-// ... (existing imports)
-
-
-function encode(bytes: Uint8Array) {
+// Base64 encoding functions
+function encode(bytes: Uint8Array): string {
   let binary = '';
-  const len = bytes.byteLength;
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
+  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
   return btoa(binary);
 }
 
-function decode(base64: string) {
-  const binaryString = atob(base64);
-  const len = binaryString.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) {
-    bytes[i] = binaryString.charCodeAt(i);
-  }
+function decode(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
   return bytes;
-}
-
-function createBlob(data: Float32Array): { data: string; mimeType: string } {
-  const l = data.length;
-  const int16 = new Int16Array(l);
-  for (let i = 0; i < l; i++) {
-    const s = Math.max(-1, Math.min(1, data[i]));
-    int16[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
-  }
-  return {
-    data: encode(new Uint8Array(int16.buffer)),
-    mimeType: 'audio/pcm;rate=16000',
-  };
-}
-
-async function pcmToAudioBuffer(
-  data: Uint8Array,
-  ctx: AudioContext,
-  sampleRate: number,
-  numChannels: number,
-): Promise<AudioBuffer> {
-  const dataInt16 = new Int16Array(data.buffer);
-  const frameCount = dataInt16.length / numChannels;
-  const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
-
-  for (let channel = 0; channel < numChannels; channel++) {
-    const channelData = buffer.getChannelData(channel);
-    for (let i = 0; i < frameCount; i++) {
-      channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
-    }
-  }
-  return buffer;
 }
 
 interface TranscriptItem {
@@ -74,67 +46,18 @@ interface InterviewFeedback {
 }
 
 const LANGUAGES = [
-  'English',
-  'Hindi',
-  'Bengali',
-  'Telugu',
-  'Marathi',
-  'Tamil',
-  'Urdu',
-  'Gujarati',
-  'Kannada',
-  'Malayalam',
-  'Odia',
-  'Punjabi',
-  'Assamese',
-  'Maithili',
-  'Santali',
-  'Kashmiri',
-  'Nepali',
-  'Konkani',
-  'Sindhi',
-  'Dogri',
-  'Manipuri',
-  'Bodo',
-  'Sanskrit',
-  'Bhojpuri',
-  'Spanish',
-  'French',
-  'German',
-  'Japanese',
-  'Mandarin'
+  'English', 'Hindi', 'Bengali', 'Telugu', 'Marathi', 'Tamil', 'Urdu', 'Gujarati',
+  'Kannada', 'Malayalam', 'Odia', 'Punjabi', 'Assamese', 'Maithili', 'Santali',
+  'Kashmiri', 'Nepali', 'Konkani', 'Sindhi', 'Dogri', 'Manipuri', 'Bodo', 'Sanskrit',
+  'Bhojpuri', 'Spanish', 'French', 'German', 'Japanese', 'Mandarin'
 ];
 
 const LANGUAGE_CODES: Record<string, string> = {
-  'English': 'en-US',
-  'Hindi': 'hi-IN',
-  'Bengali': 'bn-IN',
-  'Telugu': 'te-IN',
-  'Marathi': 'mr-IN',
-  'Tamil': 'ta-IN',
-  'Urdu': 'ur-IN',
-  'Gujarati': 'gu-IN',
-  'Kannada': 'kn-IN',
-  'Malayalam': 'ml-IN',
-  'Odia': 'or-IN',
-  'Punjabi': 'pa-IN',
-  'Assamese': 'as-IN',
-  'Maithili': 'mai-IN',
-  'Santali': 'sat-IN',
-  'Kashmiri': 'ks-IN',
-  'Nepali': 'ne-NP',
-  'Konkani': 'kok-IN',
-  'Sindhi': 'sd-IN',
-  'Dogri': 'doi-IN',
-  'Manipuri': 'mni-IN',
-  'Bodo': 'brx-IN',
-  'Sanskrit': 'sa-IN',
-  'Bhojpuri': 'bho-IN',
-  'Spanish': 'es-ES',
-  'French': 'fr-FR',
-  'German': 'de-DE',
-  'Japanese': 'ja-JP',
-  'Mandarin': 'zh-CN'
+  'English': 'en-US', 'Hindi': 'hi-IN', 'Bengali': 'bn-IN', 'Telugu': 'te-IN',
+  'Marathi': 'mr-IN', 'Tamil': 'ta-IN', 'Urdu': 'ur-IN', 'Gujarati': 'gu-IN',
+  'Kannada': 'kn-IN', 'Malayalam': 'ml-IN', 'Odia': 'or-IN', 'Punjabi': 'pa-IN',
+  'Assamese': 'as-IN', 'Nepali': 'ne-IN', 'Spanish': 'es-ES', 'French': 'fr-FR',
+  'German': 'de-DE', 'Japanese': 'ja-JP', 'Mandarin': 'zh-CN'
 };
 
 const PERSONAS = {
@@ -161,8 +84,6 @@ const PERSONAS = {
   }
 };
 
-type SessionStage = 'setup' | 'parsing' | 'initializing' | 'interview' | 'processing_feedback' | 'feedback';
-
 interface ErrorDetail {
   type: 'MIC_PERMISSION' | 'NETWORK' | 'AI_SYNC' | 'PARSING' | 'GENERIC';
   message: string;
@@ -172,7 +93,7 @@ interface ErrorDetail {
 const LiveInterview: React.FC = () => {
   const { user, session } = useAuth();
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [stage, setStage] = useState<SessionStage>('setup');
+  const [stage, setStage] = useState<InterviewStage>('setup');
   const [resumeFile, setResumeFile] = useState<File | null>(null);
   const [resumeContext, setResumeContext] = useState<string>('');
   const [jobRole, setJobRole] = useState<string>('');
@@ -184,15 +105,17 @@ const LiveInterview: React.FC = () => {
   const [transcripts, setTranscripts] = useState<TranscriptItem[]>([]);
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
-  const [debugMsg, setDebugMsg] = useState<string>('');
   const [voiceWarning, setVoiceWarning] = useState<string | null>(null);
 
   const [liveUserText, setLiveUserText] = useState('');
   const [liveAiText, setLiveAiText] = useState('');
+  const [questionProgress, setQuestionProgress] = useState({ current: 0, total: 0 });
+
+  // Interview session state (new architecture)
+  const interviewSessionRef = useRef<InterviewSession | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const inputAudioContextRef = useRef<AudioContext | null>(null);
-  const sessionRef = useRef<any>(null);
   const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
   const nextStartTimeRef = useRef<number>(0);
   const streamRef = useRef<MediaStream | null>(null);
@@ -200,9 +123,34 @@ const LiveInterview: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const isSpeakingRef = useRef<boolean>(false);
 
-  const currentInputTransRef = useRef<string>('');
-  const currentOutputTransRef = useRef<string>('');
+  // Load voices
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = window.speechSynthesis.getVoices();
+      setVoices(availableVoices);
+    };
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+    return () => { window.speechSynthesis.onvoiceschanged = null; };
+  }, []);
+
+  // Select voice based on language
+  useEffect(() => {
+    if (voices.length > 0) {
+      const langCode = LANGUAGE_CODES[language] || 'en-US';
+      const matchingVoice = voices.find(v => v.lang.startsWith(langCode.split('-')[0])) ||
+        voices.find(v => v.lang.startsWith('en'));
+      setSelectedVoice(matchingVoice || null);
+      if (!matchingVoice) {
+        setVoiceWarning(language);
+      } else {
+        setVoiceWarning(null);
+      }
+    }
+  }, [language, voices]);
 
   const cleanupAudio = () => {
     sourcesRef.current.forEach(s => { try { s.stop(); } catch (e) { } });
@@ -223,109 +171,96 @@ const LiveInterview: React.FC = () => {
       cancelAnimationFrame(animationFrameRef.current);
       animationFrameRef.current = null;
     }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) { }
+      recognitionRef.current = null;
+    }
+    window.speechSynthesis.cancel();
     nextStartTimeRef.current = 0;
     setIsConnected(false);
   };
 
   const parseResume = async (file: File) => {
+    setResumeFile(file);
     setStage('parsing');
-    setErrorDetail(null);
-    try {
-      // const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY }); // REMOVED
-      const reader = new FileReader();
-
-      reader.onload = async () => {
-        try {
-          const base64 = (reader.result as string).split(',')[1];
-          const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-          if (!apiKey) {
-            throw new Error("API Key is missing. Please set VITE_GEMINI_API_KEY in your environment variables.");
-          }
-          const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-          const result = await model.generateContent([
-            {
-              inlineData: {
-                data: base64,
-                mimeType: file.type || 'application/pdf'
-              }
-            },
-            "Extract the core experience, top 5 technical skills, and 3 key achievements from this resume. Keep it brief and bulleted."
-          ]);
-          setResumeContext(result.response.text());
-          setResumeFile(file);
-          setStage('setup');
-        } catch (err: any) {
-          console.error("Resume parsing error:", err);
-          setErrorDetail({
-            type: 'PARSING',
-            message: err.message?.includes("API Key") ? "API Key missing. Please configure your environment." : "Neural parsing failed. Please ensure the file is a valid PDF.",
-            action: () => setStage('setup')
-          });
-          setResumeFile(file);
-          setStage('setup');
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        // Simple text extraction (for actual PDF parsing, use a library)
+        let text = reader.result as string;
+        if (file.type === 'application/pdf') {
+          // For PDF, we'll just use a placeholder - in production use pdf.js
+          text = `Resume uploaded: ${file.name}`;
         }
-      };
-
-      reader.onerror = () => {
-        setErrorDetail({ type: 'PARSING', message: "File reading error. Please try a different PDF or Word document." });
+        // Limit context to save tokens
+        const context = text.substring(0, 2000);
+        setResumeContext(context);
         setStage('setup');
-      };
-
-      reader.readAsDataURL(file);
-    } catch (e) {
-      console.error("Resume parsing failed", e);
+      } catch (err: any) {
+        setErrorDetail({
+          type: 'PARSING',
+          message: "Unable to parse resume. Please try a different file format.",
+          action: () => setStage('setup')
+        });
+        setStage('setup');
+      }
+    };
+    reader.onerror = () => {
+      setErrorDetail({ type: 'PARSING', message: "Error reading file." });
       setStage('setup');
+    };
+    if (file.type.includes('text') || file.type.includes('pdf')) {
+      reader.readAsText(file);
+    } else {
+      reader.readAsText(file);
     }
   };
 
   const drawVisualizer = () => {
-    if (!analyserRef.current || !canvasRef.current) return;
     const canvas = canvasRef.current;
+    const analyser = analyserRef.current;
+    if (!canvas || !analyser) return;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const bufferLength = analyserRef.current.frequencyBinCount;
+
+    const bufferLength = analyser.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
 
     const draw = () => {
       animationFrameRef.current = requestAnimationFrame(draw);
-      analyserRef.current?.getByteFrequencyData(dataArray);
+      analyser.getByteFrequencyData(dataArray);
 
-      ctx.fillStyle = '#0F172A';
+      ctx.fillStyle = 'rgb(15, 23, 42)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      ctx.strokeStyle = 'rgba(255,255,255,0.03)';
-      ctx.lineWidth = 1;
-      for (let i = 0; i < canvas.width; i += 40) {
-        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
-      }
-
-      const barWidth = (canvas.width / (bufferLength / 1.5));
+      const barWidth = (canvas.width / bufferLength) * 2.5;
       let x = 0;
+
       for (let i = 0; i < bufferLength; i++) {
-        const barHeight = (dataArray[i] / 255) * canvas.height * 0.7;
-        const color = liveAiText ? '#38bdf8' : '#0ea5e9';
-
-        ctx.fillStyle = color;
-        ctx.globalAlpha = 0.2 + (barHeight / canvas.height);
-
-        const y = (canvas.height - barHeight) / 2;
-        ctx.beginPath();
-        ctx.roundRect(x, y, barWidth - 4, barHeight, 20);
-        ctx.fill();
-
-        x += barWidth;
+        const barHeight = (dataArray[i] / 255) * canvas.height * 0.8;
+        const gradient = ctx.createLinearGradient(0, canvas.height - barHeight, 0, canvas.height);
+        gradient.addColorStop(0, '#6366f1');
+        gradient.addColorStop(1, '#8b5cf6');
+        ctx.fillStyle = gradient;
+        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+        x += barWidth + 1;
       }
     };
     draw();
   };
 
+  /**
+   * NEW: Human-like interview flow
+   * Uses static questions, no live Gemini calls
+   */
   const startInterviewFlow = async () => {
     if (!jobRole) {
       alert("Please specify the job role.");
       return;
     }
 
+    // Credit check only for feedback (1 credit)
     if (user?.id) {
       try {
         await verifyCredits(session, CREDIT_COSTS.INTERVIEW_PREP);
@@ -343,8 +278,10 @@ const LiveInterview: React.FC = () => {
     setStage('initializing');
     setErrorDetail(null);
     setTranscripts([]);
+    setFeedback(null);
 
     try {
+      // Request microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(err => {
         if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
           throw { type: 'MIC_PERMISSION', message: "Microphone access denied. Please allow microphone access in your browser settings and try again." };
@@ -357,62 +294,39 @@ const LiveInterview: React.FC = () => {
       streamRef.current = stream;
 
       const inputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
-      const outputCtx = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
       await inputCtx.resume();
-      await outputCtx.resume();
-
       inputAudioContextRef.current = inputCtx;
-      audioContextRef.current = outputCtx;
-      const outputNode = outputCtx.createGain();
-      outputNode.connect(outputCtx.destination);
 
       const analyser = inputCtx.createAnalyser();
       analyser.fftSize = 256;
       analyserRef.current = analyser;
+      const source = inputCtx.createMediaStreamSource(stream);
+      source.connect(analyser);
 
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-      if (!apiKey) throw new Error("API Key missing");
-
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
-      const chatSession = model.startChat({
-        history: [
-          {
-            role: "user",
-            parts: [{
-              text: `You are an expert interviewer in ${language} for the role of ${jobRole}.
-            Your persona: ${PERSONAS[persona].instruction}
-            
-            CANDIDATE CONTEXT (From Resume):
-            ${resumeContext || 'No resume provided. Ask about their background first.'}
-            
-            MANDATORY INSTRUCTIONS:
-            1. Speak ONLY in ${language}.
-            2. ACT LIKE A HUMAN: Use natural conversational fillers (e.g., "I see", "That's interesting", "Hmm").
-            3. TONE: Warm, encouraging, and casual. Do NOT be formal. 
-            4. FORMATTING: Do NOT use markdown, bullet points, or numbered lists. Speak in full, flowing sentences.
-            5. KEEP IT BRIEF: Ask only one question at a time. Maximum 2 sentences.
-            4. LISTEN & REACT: Briefly acknowledge their previous answer before moving on.
-            5. Drill down into specific resume details (${resumeContext ? 'Context available' : 'No resume'}).
-            6. Start immediately with a warm, human greeting and your first question.
-            
-            CRITICAL: Do not speak English unless the candidate speaks English. Your output must be in ${language} script and language.`
-            }]
-          }
-        ]
+      // Create interview session with static questions
+      const interviewSession = createInterviewSession({
+        jobRole,
+        language,
+        persona,
+        cvSummary: resumeContext,
+        questionCount: 5
       });
 
-      sessionRef.current = chatSession;
+      interviewSessionRef.current = interviewSession;
+      setQuestionProgress({ current: 1, total: interviewSession.questions.length });
+
       setIsConnected(true);
-      setStage('interview');
+      setStage('asking');
       drawVisualizer();
 
-      const startResult = await chatSession.sendMessage(`Start the interview now in ${language}.`);
-      const text = startResult.response.text();
-      setLiveAiText(text);
-      setTranscripts(prev => [...prev, { role: 'ai', text }]);
-      speakText(text);
+      // Opening greeting
+      const greeting = getOpeningGreeting({ jobRole, language, persona });
+      setLiveAiText(greeting);
+      setTranscripts([{ role: 'ai', text: greeting }]);
+      await speakTextAsync(greeting);
+
+      // Ask first question
+      await askCurrentQuestion();
 
     } catch (err: any) {
       console.error(err);
@@ -426,121 +340,199 @@ const LiveInterview: React.FC = () => {
     }
   };
 
-  const speakText = (text: string) => {
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+  /**
+   * Speak text and return a promise that resolves when done
+   */
+  const speakTextAsync = (text: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
 
-    const targetLangCode = LANGUAGE_CODES[language] || 'en-US';
-    utterance.lang = targetLangCode;
-    utterance.rate = 0.9; // Slightly slower for more natural pacing
-    utterance.pitch = 1.1; // Slightly higher/clearer
-
-    // Robust Voice Selection using state
-    let voice = voices.find(v => v.lang === targetLangCode);
-    if (!voice) voice = voices.find(v => v.lang.startsWith(targetLangCode.split('-')[0]));
-    if (!voice) voice = voices.find(v => v.name.includes(language));
-
-    // Fallback/Debug
-    if (voice) {
-      utterance.voice = voice;
-      setSelectedVoice(voice);
-      setVoiceWarning(null);
-      setDebugMsg(`Playing with: ${voice.name} (${voice.lang})`);
-    } else {
-      // 4. Fallback Strategy: Rely on browser's native handling but force 'hi-IN' for Indic info
-      // The user confirmed Hindi works "perfectly" even though our debugger saw 0 Hindi voices. 
-      // This means Chrome has a "hidden" Network Hindi voice that triggers only on lang='hi-IN'.
-      const INDIC_LANGS = ['bn-IN', 'te-IN', 'mr-IN', 'ta-IN', 'ur-IN', 'gu-IN', 'kn-IN', 'ml-IN', 'or-IN', 'pa-IN', 'as-IN', 'mai-IN', 'sat-IN', 'ks-IN', 'ne-NP', 'kok-IN', 'sd-IN', 'doi-IN', 'mni-IN', 'brx-IN', 'sa-IN', 'bho-IN'];
-
-      if (INDIC_LANGS.includes(targetLangCode)) {
-        // Force the browser to use its internal Hindi voice
-        utterance.lang = 'hi-IN';
-        setDebugMsg(`Fallback: Forcing lang='hi-IN' (Browser native magic)`);
-        // Do NOT set utterance.voice, let browser find the hidden one.
-      } else {
-        setDebugMsg(`No voice found for ${targetLangCode}. Using system default.`);
-        setVoiceWarning(language);
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
       }
-    }
+      utterance.rate = 0.95;
+      utterance.pitch = 1.0;
 
-    utterance.onend = () => startListening();
-    utterance.onerror = (e) => {
-      console.error("TTS Error:", e);
-      // If TTS fails (e.g. language not supported), we still want to continue the interview flow.
-      startListening();
-    };
-    window.speechSynthesis.speak(utterance);
+      isSpeakingRef.current = true;
+
+      utterance.onend = () => {
+        isSpeakingRef.current = false;
+        resolve();
+      };
+      utterance.onerror = (e) => {
+        isSpeakingRef.current = false;
+        console.error('TTS Error:', e);
+        resolve(); // Still resolve to continue flow
+      };
+
+      window.speechSynthesis.speak(utterance);
+    });
   };
 
+  /**
+   * Ask the current question from the static bank
+   */
+  const askCurrentQuestion = async () => {
+    const session = interviewSessionRef.current;
+    if (!session) return;
+
+    const question = getCurrentQuestion(session);
+    if (!question) {
+      // All questions answered, get feedback
+      await stopAndFeedback();
+      return;
+    }
+
+    setStage('asking');
+    const questionText = formatQuestionNaturally(question, persona);
+    setLiveAiText(questionText);
+    setTranscripts(prev => [...prev, { role: 'ai', text: questionText }]);
+
+    await speakTextAsync(questionText);
+
+    // After speaking, start listening
+    setStage('listening');
+    startListening();
+  };
+
+  /**
+   * Start speech recognition for user response
+   */
   const startListening = () => {
     if (!('webkitSpeechRecognition' in window)) {
       alert("Your browser does not support speech recognition. Please use Chrome.");
       return;
     }
+
     // @ts-ignore
     const recognition = new window.webkitSpeechRecognition();
-    recognition.continuous = false;
+    recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = LANGUAGE_CODES[language] || 'en-US';
+
+    recognitionRef.current = recognition;
+
+    let finalTranscript = '';
+    let silenceTimeout: NodeJS.Timeout;
+
+    const resetSilenceTimer = () => {
+      clearTimeout(silenceTimeout);
+      // Wait 2 seconds of silence before considering answer complete
+      silenceTimeout = setTimeout(() => {
+        if (finalTranscript.trim().length > 10) {
+          recognition.stop();
+          handleUserResponse(finalTranscript);
+        }
+      }, 2000);
+    };
 
     recognition.onresult = (event: any) => {
       let interimTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; ++i) {
         if (event.results[i].isFinal) {
-          setLiveUserText(event.results[i][0].transcript);
-          handleUserResponse(event.results[i][0].transcript);
+          finalTranscript += event.results[i][0].transcript + ' ';
         } else {
           interimTranscript += event.results[i][0].transcript;
-          setLiveUserText(interimTranscript);
         }
       }
+      setLiveUserText(finalTranscript + interimTranscript);
+      resetSilenceTimer();
     };
 
     recognition.onerror = (event: any) => {
-      // Handle no speech or error
+      console.log('Recognition error:', event.error);
+      clearTimeout(silenceTimeout);
+    };
+
+    recognition.onend = () => {
+      clearTimeout(silenceTimeout);
+      // If we have content, process it
+      if (finalTranscript.trim().length > 10 && stage === 'listening') {
+        handleUserResponse(finalTranscript);
+      }
     };
 
     recognition.start();
+    setLiveUserText('');
+    setLiveAiText('');
+    resetSilenceTimer();
   };
 
+  /**
+   * Handle user's completed answer
+   * NEW: Adds thinking delay and uses static questions
+   */
   const handleUserResponse = async (userText: string) => {
-    setTranscripts(prev => [...prev, { role: 'user', text: userText }]);
-    setLiveUserText(userText);
-    setLiveAiText("Interviewer is thinking...");
-
-    try {
-      if (!sessionRef.current) return;
-      const result = await sessionRef.current.sendMessage(userText);
-      const responseText = result.response.text();
-
-      setLiveAiText(responseText);
-      setTranscripts(prev => [...prev, { role: 'ai', text: responseText }]);
-      speakText(responseText);
-    } catch (error) {
-      console.error("Gemini Error:", error);
-      setLiveAiText("Error getting response.");
+    // Stop listening
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) { }
     }
+
+    // Record answer in transcript
+    setTranscripts(prev => [...prev, { role: 'user', text: userText }]);
+    setLiveUserText('');
+
+    // Update session with answer
+    const session = interviewSessionRef.current;
+    if (session) {
+      interviewSessionRef.current = recordAnswer(session, userText);
+      setQuestionProgress({
+        current: interviewSessionRef.current.currentIndex + 1,
+        total: interviewSessionRef.current.questions.length
+      });
+    }
+
+    // Show "Thinking..." state
+    setStage('thinking');
+    setLiveAiText('');
+
+    // Human-like thinking delay (1.5-3 seconds)
+    await thinkingDelay();
+
+    // Check if interview is complete
+    if (interviewSessionRef.current && isInterviewComplete(interviewSessionRef.current)) {
+      await stopAndFeedback();
+      return;
+    }
+
+    // Add transition phrase for human feel
+    const transition = getTransitionPhrase(persona, language);
+    setLiveAiText(transition);
+    await speakTextAsync(transition);
+
+    // Small pause after transition
+    await new Promise(r => setTimeout(r, 500));
+
+    // Ask next question
+    await askCurrentQuestion();
   };
 
+  /**
+   * End interview and generate feedback
+   * This is the ONLY Gemini call in the entire interview
+   */
   const stopAndFeedback = async () => {
-    if (sessionRef.current) try { sessionRef.current.close(); } catch (e) { }
     cleanupAudio();
     setStage('processing_feedback');
     setErrorDetail(null);
 
-    if (transcripts.length < 2) {
-      setErrorDetail({ type: 'GENERIC', message: "Not enough conversation data to generate a meaningful analysis. Please engage in at least 2 turns." });
+    const session = interviewSessionRef.current;
+    if (!session || session.answers.length < 1) {
+      setErrorDetail({
+        type: 'GENERIC',
+        message: "Not enough responses to generate meaningful feedback. Please answer at least one question."
+      });
       setStage('setup');
       return;
     }
 
-    const history = transcripts.map(t => `${t.role.toUpperCase()}: ${t.text}`).join('\n');
     try {
-      // const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY }); // REMOVED
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (!apiKey) {
         throw new Error("API Key is missing.");
       }
+
       const genAI = new GoogleGenerativeAI(apiKey);
       const model = genAI.getGenerativeModel({
         model: 'gemini-2.5-flash',
@@ -549,7 +541,8 @@ const LiveInterview: React.FC = () => {
           responseSchema: {
             type: SchemaType.OBJECT,
             properties: {
-              score: { type: SchemaType.NUMBER }, summary: { type: SchemaType.STRING },
+              score: { type: SchemaType.NUMBER },
+              summary: { type: SchemaType.STRING },
               strengths: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
               weaknesses: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
               suggestions: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
@@ -560,18 +553,50 @@ const LiveInterview: React.FC = () => {
         }
       });
 
-      const res = await model.generateContent(`Evaluate this interview for a ${jobRole} role in ${language} with a ${persona} interviewer.
- 
- TRANSCRIPT:
- ${history}`);
+      const feedbackPrompt = buildFeedbackPrompt(session);
+      const res = await model.generateContent(feedbackPrompt);
+      const feedbackData = JSON.parse(res.response.text());
 
-      setFeedback(JSON.parse(res.response.text()));
+      setFeedback(feedbackData);
       setStage('feedback');
+
     } catch (err: any) {
       console.error("Feedback generation error:", err);
-      setErrorDetail({ type: 'GENERIC', message: err.message?.includes("API Key") ? "API Key missing." : "Neural diagnostic failed. Our analysis servers are currently overwhelmed." });
+      setErrorDetail({
+        type: 'GENERIC',
+        message: err.message?.includes("API Key") ? "API Key missing." : "Unable to generate feedback. Please try again."
+      });
       setStage('setup');
     }
+  };
+
+  /**
+   * Skip current question (for UI purposes)
+   */
+  const skipQuestion = async () => {
+    const session = interviewSessionRef.current;
+    if (session) {
+      interviewSessionRef.current = recordAnswer(session, "[Skipped]");
+      setQuestionProgress({
+        current: interviewSessionRef.current.currentIndex + 1,
+        total: interviewSessionRef.current.questions.length
+      });
+    }
+
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch (e) { }
+    }
+
+    setLiveUserText('');
+    setTranscripts(prev => [...prev, { role: 'user', text: '[Skipped this question]' }]);
+
+    // Check if complete
+    if (interviewSessionRef.current && isInterviewComplete(interviewSessionRef.current)) {
+      await stopAndFeedback();
+      return;
+    }
+
+    await askCurrentQuestion();
   };
 
   return (
@@ -585,10 +610,10 @@ const LiveInterview: React.FC = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-500"></span>
             </span>
-            Real-Time AI Simulation
+            Human-Like AI Interview
           </div>
           <h2 className="text-5xl md:text-7xl font-extrabold mb-6 tracking-tighter leading-tight">Master Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-blue-500">Next Interview</span></h2>
-          <p className="text-slate-400 max-w-2xl mx-auto text-lg">Select your language, role, and difficulty. Our AI Recruiter will grill you just like the real thing.</p>
+          <p className="text-slate-400 max-w-2xl mx-auto text-lg">Natural conversation flow with thinking pauses. Our AI interviewer behaves just like a real recruiter.</p>
         </div>
 
         <div className={`glass dark:bg-navy-900/40 rounded-[3rem] border border-white/5 backdrop-blur-2xl p-8 md:p-16 shadow-2xl transition-all duration-700 relative overflow-hidden ${stage === 'feedback' ? 'bg-white !text-navy-950' : ''}`}>
@@ -606,17 +631,11 @@ const LiveInterview: React.FC = () => {
               </div>
               <div className="flex gap-4 shrink-0">
                 {errorDetail.action && (
-                  <button
-                    onClick={errorDetail.action}
-                    className="px-6 py-2 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-colors"
-                  >
+                  <button onClick={errorDetail.action} className="px-6 py-2 bg-red-500 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-red-600 transition-colors">
                     Try Again
                   </button>
                 )}
-                <button
-                  onClick={() => setErrorDetail(null)}
-                  className="px-6 py-2 bg-white/5 border border-white/10 text-white/50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors"
-                >
+                <button onClick={() => setErrorDetail(null)} className="px-6 py-2 bg-white/5 border border-white/10 text-white/50 rounded-xl text-[10px] font-black uppercase tracking-widest hover:text-white transition-colors">
                   Dismiss
                 </button>
               </div>
@@ -677,13 +696,13 @@ const LiveInterview: React.FC = () => {
               <div className="bg-navy-950 p-8 rounded-[2rem] border border-white/5 group/file relative overflow-hidden">
                 <div className="flex items-center justify-between mb-4">
                   <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Resume Context (Optional)</h4>
-                  {resumeFile && <span className="text-[10px] font-black text-green-500 uppercase tracking-widest flex items-center gap-2"><i className="fas fa-check-circle"></i> Context Loaded</span>}
+                  {resumeFile && <span className="text-[10px] font-black text-green-500 uppercase tracking-widest flex items-center gap-2"><i className="fas fa-check-circle"></i>Context Loaded</span>}
                 </div>
                 <div
                   onClick={() => fileInputRef.current?.click()}
                   className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all ${resumeFile ? 'border-brand-500 bg-brand-500/5' : 'border-white/10 hover:border-brand-500/50'}`}
                 >
-                  <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx" onChange={e => e.target.files && parseResume(e.target.files[0])} />
+                  <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.txt" onChange={e => e.target.files && parseResume(e.target.files[0])} />
                   <div className="text-3xl mb-4 text-brand-500"><i className={`fas ${resumeFile ? 'fa-file-circle-check' : 'fa-brain-circuit'}`}></i></div>
                   <p className="text-sm font-bold">{resumeFile ? resumeFile.name : "Upload Resume for tailored questions"}</p>
                   <p className="text-[10px] mt-2 opacity-40 font-bold uppercase tracking-widest">The AI will read your projects & skills</p>
@@ -696,10 +715,10 @@ const LiveInterview: React.FC = () => {
                   disabled={stage !== 'setup'}
                   className="w-full py-6 bg-brand-500 hover:bg-brand-600 rounded-2xl font-black text-2xl shadow-2xl shadow-brand-500/30 transition-all transform hover:-translate-y-1 active:scale-95 btn-shimmer disabled:opacity-50"
                 >
-                  Start 100% Free Session
+                  Start Interview Session
                 </button>
                 <p className="mt-4 text-[10px] text-slate-500 font-bold uppercase tracking-widest flex items-center justify-center gap-2">
-                  <i className="fas fa-lock text-brand-500"></i> No payment required • Private & Secure
+                  <i className="fas fa-sparkles text-brand-500"></i> Natural conversation flow • No robotic responses
                 </p>
               </div>
             </div>
@@ -713,34 +732,66 @@ const LiveInterview: React.FC = () => {
                 <i className={`fas ${stage === 'parsing' ? 'fa-brain' : 'fa-bolt-lightning'} absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-4xl text-brand-500 animate-pulse`}></i>
               </div>
               <div className="text-center">
-                <h3 className="text-3xl font-black uppercase mb-4 tracking-tighter">{stage === 'parsing' ? 'Analyzing Resume' : 'Connecting to AI Agent'}</h3>
-                <p className="text-slate-500 max-w-sm mx-auto font-medium">Preparing your personalized interview questions...</p>
-                <button onClick={() => setStage('setup')} className="mt-8 text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors underline">Cancel Session</button>
+                <h3 className="text-3xl font-black uppercase mb-4 tracking-tighter">{stage === 'parsing' ? 'Analyzing Resume' : 'Preparing Questions'}</h3>
+                <p className="text-slate-500 max-w-sm mx-auto font-medium">Setting up your personalized interview experience...</p>
+                <button onClick={() => { cleanupAudio(); setStage('setup'); }} className="mt-8 text-[10px] font-black text-slate-500 hover:text-white uppercase tracking-widest transition-colors underline">Cancel Session</button>
               </div>
             </div>
           )}
 
-          {stage === 'interview' && (
+          {(stage === 'asking' || stage === 'listening' || stage === 'thinking') && (
             <div className="grid lg:grid-cols-[1fr_400px] gap-12 animate-fade-in items-start">
               <div className="space-y-8">
+                {/* Progress indicator */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                      Question {questionProgress.current} of {questionProgress.total}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    {Array.from({ length: questionProgress.total }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-3 h-3 rounded-full transition-all ${i < questionProgress.current ? 'bg-brand-500' : 'bg-white/10'}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
                 <div className="bg-navy-950 rounded-[3rem] border border-white/10 overflow-hidden shadow-2xl relative group">
                   <canvas ref={canvasRef} width={800} height={350} className="w-full h-72" />
                   <div className="absolute top-6 left-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-brand-500 flex items-center justify-center animate-pulse">
-                      <i className="fas fa-microphone text-xl"></i>
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center ${stage === 'listening' ? 'bg-brand-500 animate-pulse' : stage === 'thinking' ? 'bg-yellow-500 animate-bounce' : 'bg-blue-500'}`}>
+                      <i className={`fas ${stage === 'listening' ? 'fa-microphone' : stage === 'thinking' ? 'fa-brain' : 'fa-comment-dots'} text-xl`}></i>
                     </div>
-                    <span className="text-xs font-black uppercase tracking-widest text-white/50">Listening...</span>
+                    <span className="text-xs font-black uppercase tracking-widest text-white/50">
+                      {stage === 'listening' ? 'Listening to you...' : stage === 'thinking' ? 'Interviewer thinking...' : 'Interviewer speaking...'}
+                    </span>
                   </div>
                 </div>
 
                 <div className="bg-white/5 p-12 rounded-[3rem] border border-white/5 min-h-[250px] flex flex-col justify-center text-center relative group">
                   <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-500 to-transparent opacity-50"></div>
-                  <p className="text-[10px] font-black text-brand-400 mb-6 uppercase tracking-[0.5em]">Live Transcription</p>
+                  <p className="text-[10px] font-black text-brand-400 mb-6 uppercase tracking-[0.5em]">
+                    {stage === 'listening' ? 'Your Response' : stage === 'thinking' ? 'Processing...' : 'Interviewer Question'}
+                  </p>
                   <p className="text-2xl md:text-3xl font-bold leading-tight italic text-slate-100 px-4">
-                    {liveAiText ? `"${liveAiText}"` : liveUserText ? "You speaking..." : "Interviewer is analyzing..."}
+                    {stage === 'thinking' ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <span className="w-3 h-3 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                        <span className="w-3 h-3 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                        <span className="w-3 h-3 bg-yellow-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                      </span>
+                    ) : stage === 'listening' && liveUserText ? (
+                      `"${liveUserText}"`
+                    ) : liveAiText ? (
+                      `"${liveAiText}"`
+                    ) : (
+                      "Listening..."
+                    )}
                   </p>
 
-                  {/* Missing Voice Warning */}
                   {voiceWarning && (
                     <div className="mt-6 mx-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-xl text-left flex items-start gap-4">
                       <i className="fas fa-exclamation-triangle text-yellow-500 mt-1"></i>
@@ -748,19 +799,24 @@ const LiveInterview: React.FC = () => {
                         <p className="text-yellow-400 font-bold text-xs uppercase tracking-wide mb-1">Voice Missing</p>
                         <p className="text-slate-300 text-xs leading-relaxed">
                           Your device doesn't have a <strong>{voiceWarning}</strong> text-to-speech voice installed.
-                          <br /><span className="opacity-70 mt-1 block">To fix: Go to Windows Settings {'>'} Time & Language {'>'} Speech {'>'} Add a voice, and install <strong>{voiceWarning}</strong> (or Hindi).</span>
                         </p>
                       </div>
                     </div>
                   )}
-
-                  {/* Debug Info Removed */}
                 </div>
 
-                <button onClick={stopAndFeedback} className="w-full py-6 bg-red-500/10 hover:bg-red-500 border border-red-500/20 text-red-500 hover:text-white rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-4 group">
-                  <i className="fas fa-flag-checkered group-hover:rotate-12 transition-transform"></i>
-                  Finish & Get Score
-                </button>
+                <div className="flex gap-4">
+                  {stage === 'listening' && (
+                    <button onClick={skipQuestion} className="flex-1 py-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2">
+                      <i className="fas fa-forward"></i>
+                      Skip Question
+                    </button>
+                  )}
+                  <button onClick={stopAndFeedback} className="flex-1 py-6 bg-red-500/10 hover:bg-red-500 border border-red-500/20 text-red-500 hover:text-white rounded-[2rem] font-black text-lg transition-all flex items-center justify-center gap-4 group">
+                    <i className="fas fa-flag-checkered group-hover:rotate-12 transition-transform"></i>
+                    Finish & Get Score
+                  </button>
+                </div>
               </div>
 
               <div className="bg-navy-950/80 p-8 rounded-[3rem] border border-white/10 flex flex-col h-[700px] shadow-2xl">
@@ -783,7 +839,7 @@ const LiveInterview: React.FC = () => {
                       </div>
                     </div>
                   ))}
-                  {liveUserText && (
+                  {liveUserText && stage === 'listening' && (
                     <div className="flex flex-col items-end animate-pulse">
                       <div className="p-6 rounded-[2rem] text-sm bg-brand-600/40 text-white rounded-tr-none italic">
                         {liveUserText}
@@ -801,8 +857,8 @@ const LiveInterview: React.FC = () => {
                 <i className="fas fa-microchip text-4xl text-brand-500 animate-bounce"></i>
               </div>
               <div className="text-center">
-                <h3 className="text-4xl font-black mb-4 tracking-tighter">Calculating Score</h3>
-                <p className="text-slate-500 max-w-sm mx-auto font-medium">Analyzing your confidence, keyword usage, and answer structure...</p>
+                <h3 className="text-4xl font-black mb-4 tracking-tighter">Generating Feedback</h3>
+                <p className="text-slate-500 max-w-sm mx-auto font-medium">Analyzing your responses for clarity, confidence, and content...</p>
               </div>
             </div>
           )}
@@ -817,10 +873,10 @@ const LiveInterview: React.FC = () => {
                   </svg>
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center">
                     <span className="text-7xl font-black text-navy-950">{feedback.score}</span>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Mastery Index</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Interview Score</p>
                   </div>
                 </div>
-                <h2 className="text-4xl font-black uppercase tracking-tighter mb-6">Simulation Report</h2>
+                <h2 className="text-4xl font-black uppercase tracking-tighter mb-6">Interview Report</h2>
                 <p className="text-slate-600 text-xl max-w-3xl mx-auto leading-relaxed italic border-l-4 border-brand-500 pl-8 py-2">"{feedback.summary}"</p>
               </div>
 
@@ -854,7 +910,7 @@ const LiveInterview: React.FC = () => {
               <div className="bg-brand-500/5 p-12 rounded-[3.5rem] border border-brand-500/10 shadow-lg relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/5 rounded-full -mr-32 -mt-32"></div>
                 <h4 className="text-brand-600 font-black text-xs mb-10 flex items-center gap-4 uppercase tracking-widest">
-                  <i className="fas fa-sparkles text-xl"></i> Executive Tip
+                  <i className="fas fa-sparkles text-xl"></i> Pro Tip
                 </h4>
                 <div className="p-8 bg-white rounded-3xl border border-brand-500/20 shadow-inner">
                   <p className="text-lg text-slate-800 leading-relaxed font-bold italic">"{feedback.idealResponseTip}"</p>
@@ -862,13 +918,14 @@ const LiveInterview: React.FC = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-6 pt-10 print:hidden">
-                <button onClick={() => setStage('setup')} className="flex-1 py-6 bg-navy-900 text-white hover:bg-navy-800 rounded-2xl font-black text-xl shadow-2xl transition-all hover:scale-[1.02] active:scale-95">Restart Free Simulation</button>
+                <button onClick={() => { setStage('setup'); setFeedback(null); interviewSessionRef.current = null; }} className="flex-1 py-6 bg-navy-900 text-white hover:bg-navy-800 rounded-2xl font-black text-xl shadow-2xl transition-all hover:scale-[1.02] active:scale-95">Try Another Interview</button>
                 <button onClick={() => window.print()} className="flex-1 py-6 bg-brand-500 text-white hover:bg-brand-600 rounded-2xl font-black text-xl shadow-2xl transition-all hover:scale-[1.02] active:scale-95">Export Report</button>
               </div>
             </div>
           )}
         </div>
       </div>
+
       {showUpgradeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy-950/80 backdrop-blur-sm animate-fade-in">
           <div className="bg-white text-navy-950 rounded-[2rem] p-8 md:p-12 max-w-lg w-full shadow-2xl relative overflow-hidden text-center transform transition-all scale-100">
@@ -876,23 +933,23 @@ const LiveInterview: React.FC = () => {
             <div className="w-16 h-16 bg-brand-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 text-brand-600 text-3xl">
               <i className="fas fa-rocket"></i>
             </div>
-            <h3 className="text-3xl font-black mb-6 tracking-tight">Premium feature coming soon!</h3>
+            <h3 className="text-3xl font-black mb-6 tracking-tight">Credits Required</h3>
 
             <div className="text-left max-w-xs mx-auto space-y-4 mb-8">
               <div className="flex items-center gap-4 text-slate-700 font-bold text-lg">
-                <i className="fas fa-check-circle text-green-500 text-xl"></i> AI Interview feedback
+                <i className="fas fa-check-circle text-green-500 text-xl"></i> Human-like AI interviewer
               </div>
               <div className="flex items-center gap-4 text-slate-700 font-bold text-lg">
-                <i className="fas fa-check-circle text-green-500 text-xl"></i> High-quality PDF export
+                <i className="fas fa-check-circle text-green-500 text-xl"></i> Detailed feedback report
               </div>
               <div className="flex items-center gap-4 text-slate-700 font-bold text-lg">
-                <i className="fas fa-check-circle text-green-500 text-xl"></i> Resume improvement
+                <i className="fas fa-check-circle text-green-500 text-xl"></i> Personalized improvement tips
               </div>
             </div>
 
             <div className="bg-brand-500/10 p-4 rounded-xl border border-brand-500/20 mb-8 inline-block">
               <p className="text-brand-600 font-black uppercase tracking-widest text-sm flex items-center gap-2">
-                <i className="fas fa-gift animate-bounce"></i> Early users get FREE credits
+                <i className="fas fa-coins"></i> Only 1 credit per interview
               </p>
             </div>
 
