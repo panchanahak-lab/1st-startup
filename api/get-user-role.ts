@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
-// --- Inlined Shared Logic ---
+// --- Supabase Admin Client ---
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
@@ -29,6 +29,7 @@ async function checkIsAdmin(userId: string): Promise<boolean> {
         .single();
     return data?.role === 'admin';
 }
+
 // ----------------------------
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -43,8 +44,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const user = await getUserFromToken(req.headers.authorization || null);
         if (!user) return res.status(401).json({ error: 'Not authenticated' });
 
-        const { cost = 1 } = req.body;
-
         if (!supabaseAdmin) {
             return res.status(500).json({ error: 'Server misconfigured: Missing Supabase Admin Key' });
         }
@@ -52,48 +51,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         // Check if user is admin
         const isAdmin = await checkIsAdmin(user.id);
 
-        // Admins bypass credit checks
-        if (isAdmin) {
-            return res.status(200).json({
-                success: true,
-                remaining: 999999,
-                isAdmin: true,
-                message: 'Admin mode: credits bypassed'
-            });
-        }
-
-        const { data } = await supabaseAdmin
-            .from("subscriptions")
-            .select("ai_credits")
-            .eq("user_id", user.id)
+        // Get user role for response
+        const { data: roleData } = await supabaseAdmin
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', user.id)
             .single();
-
-        const userCredits = data?.ai_credits || 0;
-
-        if (userCredits <= 0) {
-            return res.status(403).json({
-                error: "NO_CREDITS",
-                message: "You have 0 credits. Please upgrade or wait for daily reset.",
-                currentCredits: userCredits
-            });
-        }
-
-        if (userCredits < cost) {
-            return res.status(402).json({
-                error: "INSUFFICIENT_CREDITS",
-                message: `This action requires ${cost} credits, but you only have ${userCredits}.`,
-                currentCredits: userCredits
-            });
-        }
 
         return res.status(200).json({
             success: true,
-            remaining: userCredits,
-            isAdmin: false
+            role: roleData?.role || 'user',
+            isAdmin
         });
 
     } catch (error: any) {
-        console.error('Check credits error:', error);
+        console.error('Get user role error:', error);
         return res.status(500).json({ error: error.message });
     }
 }

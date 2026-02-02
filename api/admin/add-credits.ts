@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
-// --- Inlined Shared Logic ---
 const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
@@ -29,7 +28,6 @@ async function checkIsAdmin(userId: string): Promise<boolean> {
         .single();
     return data?.role === 'admin';
 }
-// ----------------------------
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -40,60 +38,70 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     try {
+        // 1. Authenticate
         const user = await getUserFromToken(req.headers.authorization || null);
         if (!user) return res.status(401).json({ error: 'Not authenticated' });
 
-        const { cost = 1 } = req.body;
+        // 2. Check if requester is admin
+        const isAdmin = await checkIsAdmin(user.id);
+        if (!isAdmin) {
+            return res.status(403).json({ error: 'Admin access required' });
+        }
+
+        // 3. Get request body
+        const { userId, amount, action = 'add' } = req.body;
+
+        if (!userId) {
+            return res.status(400).json({ error: 'userId is required' });
+        }
+        if (typeof amount !== 'number') {
+            return res.status(400).json({ error: 'amount must be a number' });
+        }
 
         if (!supabaseAdmin) {
-            return res.status(500).json({ error: 'Server misconfigured: Missing Supabase Admin Key' });
+            return res.status(500).json({ error: 'Server misconfigured' });
         }
 
-        // Check if user is admin
-        const isAdmin = await checkIsAdmin(user.id);
-
-        // Admins bypass credit checks
-        if (isAdmin) {
-            return res.status(200).json({
-                success: true,
-                remaining: 999999,
-                isAdmin: true,
-                message: 'Admin mode: credits bypassed'
-            });
-        }
-
-        const { data } = await supabaseAdmin
-            .from("subscriptions")
-            .select("ai_credits")
-            .eq("user_id", user.id)
+        // 4. Get current credits
+        const { data: currentData } = await supabaseAdmin
+            .from('subscriptions')
+            .select('ai_credits')
+            .eq('user_id', userId)
             .single();
 
-        const userCredits = data?.ai_credits || 0;
+        const currentCredits = currentData?.ai_credits || 0;
 
-        if (userCredits <= 0) {
-            return res.status(403).json({
-                error: "NO_CREDITS",
-                message: "You have 0 credits. Please upgrade or wait for daily reset.",
-                currentCredits: userCredits
-            });
+        // 5. Calculate new credits
+        let newCredits: number;
+        if (action === 'set') {
+            newCredits = Math.max(0, amount);
+        } else {
+            // add
+            newCredits = Math.max(0, currentCredits + amount);
         }
 
-        if (userCredits < cost) {
-            return res.status(402).json({
-                error: "INSUFFICIENT_CREDITS",
-                message: `This action requires ${cost} credits, but you only have ${userCredits}.`,
-                currentCredits: userCredits
+        // 6. Update or insert
+        const { error: upsertError } = await supabaseAdmin
+            .from('subscriptions')
+            .upsert({
+                user_id: userId,
+                ai_credits: newCredits
             });
+
+        if (upsertError) {
+            console.error('Error updating credits:', upsertError);
+            return res.status(500).json({ error: 'Failed to update credits' });
         }
 
         return res.status(200).json({
             success: true,
-            remaining: userCredits,
-            isAdmin: false
+            previousCredits: currentCredits,
+            newCredits,
+            action
         });
 
     } catch (error: any) {
-        console.error('Check credits error:', error);
+        console.error('Admin add credits error:', error);
         return res.status(500).json({ error: error.message });
     }
 }
