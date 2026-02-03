@@ -332,6 +332,13 @@ Return ONLY a JSON object with this format:
       const cleanText = res.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
       const translation = JSON.parse(cleanText);
 
+      // VALIDATION: Ensure we got the correct number of questions
+      if (!translation.questions || translation.questions.length !== session.questions.length) {
+        console.warn("Translation count mismatch. Falling back to English.", translation.questions?.length, session.questions.length);
+        alert("Translation service returned incomplete data. Falling back to English.");
+        return session;
+      }
+
       return {
         ...session,
         translatedGreeting: translation.greeting,
@@ -372,6 +379,18 @@ Return ONLY a JSON object with this format:
     setErrorDetail(null);
     setTranscripts([]);
     setFeedback(null);
+
+    // GLOBAL TIMEOUT: Prevent "Preparing" loop if anything hangs
+    const initTimeout = setTimeout(() => {
+      console.error("Initialization timed out");
+      cleanupAudio();
+      resetStateMachine();
+      setErrorDetail({
+        type: 'TIMEOUT',
+        message: "Initialization timed out. Check microphone permissions or network.",
+        action: startInterviewFlow
+      });
+    }, 15000); // 15s timeout
 
     try {
       transitionTo('INITIALIZING');
@@ -418,6 +437,7 @@ Return ONLY a JSON object with this format:
 
       // Transition: INITIALIZING -> ASK_QUESTION
       transitionTo('ASK_QUESTION');
+      clearTimeout(initTimeout); // Success! Clear timeout
 
       // Opening greeting
       const greeting = interviewSession.translatedGreeting || getOpeningGreeting({ jobRole, language, persona });
@@ -429,6 +449,7 @@ Return ONLY a JSON object with this format:
       await askCurrentQuestion();
 
     } catch (err: any) {
+      clearTimeout(initTimeout);
       console.error(err);
       cleanupAudio();
       resetStateMachine();
