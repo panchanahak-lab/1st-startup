@@ -237,11 +237,22 @@ const LiveInterview: React.FC = () => {
 
       isSpeakingRef.current = true;
 
+      // SAFETY TIMEOUT: If TTS hangs (common for unsupported languages), resume after 5s
+      const safetyTimeout = setTimeout(() => {
+        console.warn("TTS timed out or unsupported voice. Proceeding manually.");
+        isSpeakingRef.current = false;
+        resolve();
+      }, 5000);
+
       utterance.onend = () => {
+        clearTimeout(safetyTimeout);
         isSpeakingRef.current = false;
         resolve();
       };
-      utterance.onerror = () => {
+
+      utterance.onerror = (e) => {
+        clearTimeout(safetyTimeout);
+        console.error("TTS Error:", e);
         isSpeakingRef.current = false;
         resolve();
       };
