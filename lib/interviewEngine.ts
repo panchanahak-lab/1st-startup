@@ -14,6 +14,8 @@ export interface InterviewSession {
     language: string;
     persona: string;
     startTime: number;
+    translatedQuestions?: string[];
+    translatedGreeting?: string;
 }
 
 export interface InterviewConfig {

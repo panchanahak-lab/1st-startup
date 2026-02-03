@@ -17,6 +17,7 @@ export type InterviewState =
     | 'PROCESSING'     // Thinking pause (UX delay)
     | 'ASK_FOLLOW_UP'  // AI asks follow-up or next question
     | 'GENERATING_FEEDBACK' // Generating final feedback
+    | 'PAUSED'         // Interview temporarily halted
     | 'COMPLETE';      // Interview finished, showing results
 
 export interface InterviewStateContext {
@@ -42,10 +43,11 @@ const VALID_TRANSITIONS: Record<InterviewState, InterviewState[]> = {
     'IDLE': ['SETUP'],
     'SETUP': ['INITIALIZING', 'IDLE'],
     'INITIALIZING': ['ASK_QUESTION', 'SETUP', 'IDLE'],
-    'ASK_QUESTION': ['LISTENING', 'IDLE'], // After speaking, listen
-    'LISTENING': ['PROCESSING', 'GENERATING_FEEDBACK', 'IDLE'], // After user speaks, process
+    'ASK_QUESTION': ['LISTENING', 'PAUSED', 'IDLE'], // After speaking, listen
+    'LISTENING': ['PROCESSING', 'GENERATING_FEEDBACK', 'PAUSED', 'IDLE'], // After user speaks, process
     'PROCESSING': ['ASK_FOLLOW_UP', 'GENERATING_FEEDBACK', 'IDLE'], // After thinking, ask or end
-    'ASK_FOLLOW_UP': ['LISTENING', 'GENERATING_FEEDBACK', 'IDLE'], // After follow-up, listen again
+    'ASK_FOLLOW_UP': ['LISTENING', 'GENERATING_FEEDBACK', 'PAUSED', 'IDLE'], // After follow-up, listen again
+    'PAUSED': ['ASK_QUESTION', 'LISTENING', 'ASK_FOLLOW_UP', 'IDLE'], // Can resume to previous state
     'GENERATING_FEEDBACK': ['COMPLETE', 'IDLE'],
     'COMPLETE': ['IDLE', 'SETUP'] // Can restart
 };
@@ -132,10 +134,11 @@ export function getStateLabel(state: InterviewState): string {
         'SETUP': 'Setting Up',
         'INITIALIZING': 'Preparing...',
         'ASK_QUESTION': 'Interviewer Speaking',
-        'LISTENING': 'Listening to You...',
-        'PROCESSING': 'Interviewer Thinking...',
+        'LISTENING': '🎤 Listening...',
+        'PROCESSING': '🤔 Interviewer is thinking...',
         'ASK_FOLLOW_UP': 'Interviewer Speaking',
         'GENERATING_FEEDBACK': 'Analyzing Performance...',
+        'PAUSED': 'Interview Paused',
         'COMPLETE': 'Interview Complete'
     };
     return labels[state] || state;
@@ -154,6 +157,7 @@ export function getStateIcon(state: InterviewState): string {
         'PROCESSING': 'fa-brain',
         'ASK_FOLLOW_UP': 'fa-comment-dots',
         'GENERATING_FEEDBACK': 'fa-chart-line',
+        'PAUSED': 'fa-pause',
         'COMPLETE': 'fa-flag-checkered'
     };
     return icons[state] || 'fa-circle';
@@ -172,6 +176,7 @@ export function getStateColor(state: InterviewState): string {
         'PROCESSING': 'yellow',
         'ASK_FOLLOW_UP': 'blue',
         'GENERATING_FEEDBACK': 'purple',
+        'PAUSED': 'slate',
         'COMPLETE': 'green'
     };
     return colors[state] || 'slate';
@@ -206,14 +211,14 @@ export const RECRUITER_PERSONALITIES: Record<string, RecruiterPersonality> = {
         praiseFrequency: 'frequent',
         pressureLevel: 2,
         transitionPhrases: [
-            "That's great, thank you for sharing.",
-            "I appreciate the detail there.",
-            "Nice, that's helpful to know.",
-            "Good, let me ask you about something else."
+            "Okay, great.",
+            "Got it.",
+            "Thanks for that.",
+            "Alright, moving on."
         ],
         challengePhrases: [
-            "Could you tell me a bit more about that?",
-            "That's interesting, what else can you share?"
+            "Can you walk me through that a bit more?",
+            "Let's dig into that."
         ]
     },
     recruiter: {
@@ -229,13 +234,13 @@ export const RECRUITER_PERSONALITIES: Record<string, RecruiterPersonality> = {
         transitionPhrases: [
             "Understood.",
             "I see.",
-            "Alright, moving on.",
+            "Okay.",
             "Got it."
         ],
         challengePhrases: [
             "Can you be more specific?",
-            "What was your exact contribution?",
-            "How did you measure that?"
+            "What was your role in that exactly?",
+            "How would you quantify that?"
         ]
     },
     stress: {
@@ -255,11 +260,11 @@ export const RECRUITER_PERSONALITIES: Record<string, RecruiterPersonality> = {
             "Let's see."
         ],
         challengePhrases: [
-            "That's vague. What exactly did you do?",
+            "That's vague. Be more specific.",
             "Why did you leave that role?",
             "Explain that in simpler terms.",
-            "What was your contribution exactly?",
-            "Those numbers seem low. Why?",
+            "What was your exact contribution?",
+            "Walk me through the numbers.",
             "What went wrong there?"
         ]
     }

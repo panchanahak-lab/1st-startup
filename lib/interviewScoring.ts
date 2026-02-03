@@ -78,10 +78,10 @@ function scoreClarity(answer: string): ScoreDimension {
     score = Math.max(0, Math.min(5, score));
 
     let feedback = '';
-    if (score >= 4) feedback = 'Clear and well-structured responses';
-    else if (score >= 3) feedback = 'Reasonably clear, could be more concise';
-    else if (score >= 2) feedback = 'Some clarity issues, consider organizing thoughts better';
-    else feedback = 'Responses need more structure and clarity';
+    if (score >= 4) feedback = 'You explained things clearly and concisely';
+    else if (score >= 3) feedback = 'Good clarity - try to be a bit more direct';
+    else if (score >= 2) feedback = 'Try organizing your thoughts before speaking';
+    else feedback = 'Focus on giving shorter, clearer answers';
 
     return { name: 'Clarity', score: Math.round(score * 10) / 10, feedback };
 }
@@ -118,10 +118,10 @@ function scoreRelevance(answer: string, config: ScoringConfig): ScoreDimension {
     score = Math.max(0, Math.min(5, score));
 
     let feedback = '';
-    if (score >= 4) feedback = 'Highly relevant answers aligned with the role';
-    else if (score >= 3) feedback = 'Mostly relevant, some tangential points';
-    else if (score >= 2) feedback = 'Partially relevant, needs more role-specific examples';
-    else feedback = 'Answers lack relevance to the target role';
+    if (score >= 4) feedback = 'Great job connecting your experience to the role';
+    else if (score >= 3) feedback = 'Mostly on target - add more role-specific details';
+    else if (score >= 2) feedback = 'Try mentioning skills from your CV more';
+    else feedback = 'Link your answers more directly to the job';
 
     return { name: 'Relevance', score: Math.round(score * 10) / 10, feedback };
 }
@@ -157,10 +157,10 @@ function scoreConfidence(answer: string): ScoreDimension {
     score = Math.max(0, Math.min(5, score));
 
     let feedback = '';
-    if (score >= 4) feedback = 'Confident and assertive communication';
-    else if (score >= 3) feedback = 'Generally confident with some hesitation';
-    else if (score >= 2) feedback = 'Lacks conviction, use more direct language';
-    else feedback = 'Needs to project more confidence';
+    if (score >= 4) feedback = 'You sounded confident and sure of yourself';
+    else if (score >= 3) feedback = 'Good confidence - try fewer "maybes" and "I thinks"';
+    else if (score >= 2) feedback = 'Be more direct - own your accomplishments';
+    else feedback = 'Project more confidence in your answers';
 
     return { name: 'Confidence', score: Math.round(score * 10) / 10, feedback };
 }
@@ -202,10 +202,10 @@ function scoreStructure(answer: string): ScoreDimension {
     score = Math.max(0, Math.min(5, score));
 
     let feedback = '';
-    if (score >= 4) feedback = 'Well-structured with clear examples and results';
-    else if (score >= 3) feedback = 'Good structure, could add more specific examples';
-    else if (score >= 2) feedback = 'Basic structure, needs STAR method improvement';
-    else feedback = 'Lacks structure, use Situation-Task-Action-Result format';
+    if (score >= 4) feedback = 'Great storytelling with clear examples';
+    else if (score >= 3) feedback = 'Good structure - add more numbers and results';
+    else if (score >= 2) feedback = 'Try the STAR format: Situation, Task, Action, Result';
+    else feedback = 'Use specific examples to tell your story';
 
     return { name: 'Structure', score: Math.round(score * 10) / 10, feedback };
 }
@@ -250,12 +250,12 @@ function scoreRoleAlignment(answer: string, config: ScoringConfig): ScoreDimensi
     score = Math.max(0, Math.min(5, score));
 
     let feedback = '';
-    if (score >= 4) feedback = 'Excellent alignment with role expectations';
-    else if (score >= 3) feedback = 'Good fit, some areas could be stronger';
-    else if (score >= 2) feedback = 'Partial alignment, emphasize role-relevant experience';
-    else feedback = 'Needs to better demonstrate fit for this role level';
+    if (score >= 4) feedback = 'Your experience fits this role really well';
+    else if (score >= 3) feedback = 'Good fit - highlight leadership if senior role';
+    else if (score >= 2) feedback = 'Show more experience relevant to this level';
+    else feedback = 'Emphasize skills that match this role';
 
-    return { name: 'Role Alignment', score: Math.round(score * 10) / 10, feedback };
+    return { name: 'Role Fit', score: Math.round(score * 10) / 10, feedback };
 }
 
 /**
@@ -361,13 +361,13 @@ export function scoreInterview(
     // Overall feedback based on total
     let overallFeedback = '';
     if (percentage >= 80) {
-        overallFeedback = 'Excellent interview performance! You demonstrated strong communication skills and relevant experience.';
+        overallFeedback = 'Excellent! You communicated clearly and made a strong impression.';
     } else if (percentage >= 60) {
-        overallFeedback = 'Good performance with room for improvement. Focus on providing more specific examples.';
+        overallFeedback = 'Good interview! Try adding more specific examples next time.';
     } else if (percentage >= 40) {
-        overallFeedback = 'Fair performance. Work on structuring your answers using the STAR method.';
+        overallFeedback = 'Nice effort! Practice using the STAR format for clearer answers.';
     } else {
-        overallFeedback = 'Needs significant improvement. Practice articulating your experience clearly.';
+        overallFeedback = 'Keep practicing! Focus on clear, confident answers with examples.';
     }
 
     return {
