@@ -816,28 +816,29 @@ const ResumeBuilder: React.FC = () => {
                 </div>
                 <button onClick={handleDownload} className="w-full sm:w-auto btn-premium bg-navy-900 dark:bg-brand-500 text-white px-8 md:px-10 py-3 md:py-4 rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-sm shadow-2xl flex items-center justify-center gap-2 md:gap-3"><i className="fas fa-file-pdf"></i> Export PDF</button>
               </div>
+            </div>
 
-              <div className="w-full flex justify-center flex-grow relative pb-20 md:pb-32 overflow-hidden md:overflow-visible">
-                <div
-                  ref={previewRef}
-                  className="bg-white shadow-2xl origin-top transition-all duration-500 printable-content relative"
-                  style={{
-                    width: '210mm',
-                    minHeight: '297mm',
-                    transform: `scale(${previewScale})`,
-                    marginBottom: `-${(1 - previewScale) * 100}%`
-                  }}
-                >
-                  {activeTemplate === 'classic' && <ClassicTemplate />}
-                  {activeTemplate === 'modern' && <ModernTemplate />}
-                  {activeTemplate === 'creative' && <CreativeTemplate />}
-                  {activeTemplate === 'academic' && <AcademicTemplate />}
-                </div>
+            <div className="w-full flex justify-center flex-grow relative pb-20 md:pb-32 overflow-hidden md:overflow-visible">
+              <div
+                ref={previewRef}
+                className="bg-white shadow-2xl origin-top transition-all duration-500 printable-content relative"
+                style={{
+                  width: '210mm',
+                  minHeight: '297mm',
+                  transform: `scale(${previewScale})`,
+                  marginBottom: `-${(1 - previewScale) * 100}%`
+                }}
+              >
+                {activeTemplate === 'classic' && <ClassicTemplate />}
+                {activeTemplate === 'modern' && <ModernTemplate />}
+                {activeTemplate === 'creative' && <CreativeTemplate />}
+                {activeTemplate === 'academic' && <AcademicTemplate />}
               </div>
             </div>
           </div>
         </div>
-        {printRoot && ReactDOM.createPortal(printContent, printRoot)}
+      </div>
+      {printRoot && ReactDOM.createPortal(printContent, printRoot)}
     </section>
   );
 };
