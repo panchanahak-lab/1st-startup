@@ -60,10 +60,30 @@ function extractMetadata(text: string): ResumeData | null {
             encodedStr = encodedStr.replace(/\s/g, '');
 
             try {
-                const jsonStr = atob(encodedStr);
-                return JSON.parse(jsonStr);
+                // Robust Unicode Decoding:
+                // 1. Try standard binary-to-string (works if platform supports TextDecoder)
+                // 2. Fallback to escape/decodeURIComponent pattern (Browser legacy)
+
+                const decodedStr = (() => {
+                    try {
+                        const binaryParams = atob(encodedStr);
+                        const bytes = new Uint8Array(binaryParams.length);
+                        for (let i = 0; i < binaryParams.length; i++) {
+                            bytes[i] = binaryParams.charCodeAt(i);
+                        }
+                        return new TextDecoder().decode(bytes);
+                    } catch (innerE) {
+                        // console.log("TextDecoder failed, trying legacy escape", innerE);
+                        // Legacy/Browser fallback
+                        // @ts-ignore
+                        return decodeURIComponent(escape(atob(encodedStr)));
+                    }
+                })();
+
+                return JSON.parse(decodedStr);
             } catch (e) {
-                console.error("Base64 decode failed, trying direct JSON (fallback)");
+                console.error("Base64 decode/parse failed", e);
+                // Last resort: maybe it wasn't encoded?
                 return JSON.parse(encodedStr);
             }
         }

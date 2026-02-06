@@ -62,8 +62,9 @@ const PROFICIENCY_LEVELS = ['Native', 'Fluent', 'Professional', 'Conversational'
 // Helper for Metadata Injection
 const MetadataInjector = ({ data }: { data: ResumeData }) => {
   // Base64 encode the data to avoid newlines/whitespace issues in PDF extraction
+  // Unicode-safe encoding: encodeURIComponent escapes non-ASCII chars, unescape keeps them byte-sized for btoa
   const jsonString = JSON.stringify({ source: 'builder', version: '1.0', ...data });
-  const encoded = btoa(jsonString);
+  const encoded = btoa(unescape(encodeURIComponent(jsonString)));
 
   return (
     <div
