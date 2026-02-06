@@ -8,7 +8,7 @@ export interface ATSScoreResult {
     overallScore: number;
     sectionScores: {
         keywords: number;      // 0-30
-        impact: number;        // 0-30 or 40 (Depends on weighting) - Actually let's stick to the Plan: Section Presence (40), Keywords (30), Formatting (20), Hygiene (10)
+        impact: number;        // 0-30 or 40
         formatting: number;    // 0-20
         completeness: number;  // 0-10 or part of Presence
     };
@@ -42,9 +42,36 @@ const COMMON_SKILLS = [
  * Metadata Marker Constants
  * Used to inject and extract hidden data from PDF text
  */
-export const METADATA_START_MARKER = "###NEXTSTEP_METADATA_START###";
-export const METADATA_END_MARKER = "###NEXTSTEP_METADATA_END###";
+export const METADATA_START_MARKER = "###NXT_DATA_START###";
+export const METADATA_END_MARKER = "###NXT_DATA_END###";
 
+/**
+ * Extract hidden metadata from PDF text
+ */
+function extractMetadata(text: string): ResumeData | null {
+    try {
+        // Attempt 1: Look for markers
+        const start = text.indexOf(METADATA_START_MARKER);
+        const end = text.indexOf(METADATA_END_MARKER);
+
+        if (start !== -1 && end !== -1 && end > start) {
+            let encodedStr = text.substring(start + METADATA_START_MARKER.length, end).trim();
+            // Sanitize: PDF extraction might insert newlines or spaces into the base64 string
+            encodedStr = encodedStr.replace(/\s/g, '');
+
+            try {
+                const jsonStr = atob(encodedStr);
+                return JSON.parse(jsonStr);
+            } catch (e) {
+                console.error("Base64 decode failed, trying direct JSON (fallback)");
+                return JSON.parse(encodedStr);
+            }
+        }
+    } catch (e) {
+        // console.error("Metadata extraction failed", e);
+    }
+    return null;
+}
 /**
  * Main Entry Point: Calculate ATS Score
  * Can accept raw text OR structured ResumeData
@@ -123,28 +150,6 @@ export function calculateATSScore(
         },
         issues: issues.slice(0, 5)
     };
-}
-
-/**
- * Extract hidden metadata from PDF text
- */
-function extractMetadata(text: string): ResumeData | null {
-    try {
-        const start = text.indexOf(METADATA_START_MARKER);
-        const end = text.indexOf(METADATA_END_MARKER);
-
-        if (start !== -1 && end !== -1 && end > start) {
-            const jsonStr = text.substring(start + METADATA_START_MARKER.length, end).trim();
-            // PDF text extraction might add newlines or weird spacing to JSON
-            // We might need to sanitize it. For now, try direct parse.
-            // In PDF hidden text, it usually stays intact if we put it in a single block.
-            // But valid JSON parsing is strict.
-            return JSON.parse(jsonStr);
-        }
-    } catch (e) {
-        // console.error("Metadata extraction failed", e);
-    }
-    return null;
 }
 
 /**

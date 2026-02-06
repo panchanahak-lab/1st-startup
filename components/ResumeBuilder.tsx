@@ -60,27 +60,33 @@ const EMPTY_DATA: ResumeData = {
 const PROFICIENCY_LEVELS = ['Native', 'Fluent', 'Professional', 'Conversational', 'Elementary'];
 
 // Helper for Metadata Injection
-const MetadataInjector = ({ data }: { data: ResumeData }) => (
-  <div
-    className="pdf-metadata"
-    style={{
-      opacity: 0,
-      height: '1px',
-      width: '1px',
-      overflow: 'hidden',
-      position: 'absolute',
-      whiteSpace: 'pre',
-      fontSize: '1px',
-      color: 'transparent',
-      zIndex: -1,
-      pointerEvents: 'none'
-    }}
-  >
-    {METADATA_START_MARKER}
-    {JSON.stringify({ source: 'builder', version: '1.0', ...data })}
-    {METADATA_END_MARKER}
-  </div>
-);
+const MetadataInjector = ({ data }: { data: ResumeData }) => {
+  // Base64 encode the data to avoid newlines/whitespace issues in PDF extraction
+  const jsonString = JSON.stringify({ source: 'builder', version: '1.0', ...data });
+  const encoded = btoa(jsonString);
+
+  return (
+    <div
+      className="pdf-metadata"
+      style={{
+        opacity: 0.01,
+        height: '1px',
+        width: '1px',
+        overflow: 'hidden',
+        position: 'absolute',
+        whiteSpace: 'pre',
+        fontSize: '1px',
+        color: '#ffffff',
+        zIndex: -1,
+        pointerEvents: 'none'
+      }}
+    >
+      {METADATA_START_MARKER}
+      {encoded}
+      {METADATA_END_MARKER}
+    </div>
+  );
+};
 
 const ResumeBuilder: React.FC = () => {
   const clone = <T,>(obj: T): T => JSON.parse(JSON.stringify(obj));
