@@ -220,14 +220,29 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
                   {analysisResult.extractedData && (
                     <button
                       onClick={() => {
-                        if (confirm("This will load this resume into the Builder so you can apply improvements and export the new PDF. Unsaved changes in the Builder will be replaced. Continue?")) {
+                        // @ts-ignore
+                        const isRaw = analysisResult.extractedData.source === 'parser';
+                        const confirmMsg = isRaw
+                          ? "We analyzed your PDF text. We'll import what we found into the Builder, but you'll likely need to fix formatting and add missing details. Continue?"
+                          : "This will load this resume into the Builder so you can apply improvements and export the new PDF. Unsaved changes in the Builder will be replaced. Continue?";
+
+                        if (confirm(confirmMsg)) {
                           localStorage.setItem('nextstep_resume_data', JSON.stringify(analysisResult.extractedData));
-                          window.location.href = '/?autoprint=true#builder';
+                          // If it's a raw import, don't auto-print. User needs to edit first.
+                          window.location.href = isRaw ? '/#builder' : '/?autoprint=true#builder';
                         }
                       }}
-                      className="w-full py-5 md:py-6 bg-brand-500 text-white rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/30 flex items-center justify-center gap-3 animate-pulse-subtle"
+                      className={`w-full py-5 md:py-6 text-white rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-xl transition-all shadow-xl flex items-center justify-center gap-3 animate-pulse-subtle ${
+                        // @ts-ignore
+                        analysisResult.extractedData?.source === 'parser'
+                          ? 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/30'
+                          : 'bg-brand-500 hover:bg-brand-600 shadow-brand-500/30'
+                        }`}
                     >
-                      <i className="fas fa-magic"></i> Improve & Export PDF
+                      {/* @ts-ignore */}
+                      <i className={`fas ${analysisResult.extractedData?.source === 'parser' ? 'fa-file-import' : 'fa-magic'}`}></i>
+                      {/* @ts-ignore */}
+                      {analysisResult.extractedData?.source === 'parser' ? 'Import & Fix (Beta)' : 'Improve & Export PDF'}
                     </button>
                   )}
 
