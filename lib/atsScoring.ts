@@ -19,6 +19,7 @@ export interface ATSScoreResult {
         hygiene: number;     // 10
     };
     issues: ATSIssue[];
+    extractedData?: ResumeData; // Extracted structure if available (from metadata)
 }
 
 export interface ATSIssue {
@@ -168,7 +169,8 @@ export function calculateATSScore(
             formatting: formattingScore,
             hygiene: hygieneScore
         },
-        issues: issues.slice(0, 5)
+        issues: issues.slice(0, 5),
+        extractedData: isBuilder ? (data || undefined) : undefined // Pass back data if we successfully extracted it
     };
 }
 

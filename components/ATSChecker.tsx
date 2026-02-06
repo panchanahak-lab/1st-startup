@@ -216,18 +216,34 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
                 </div>
                 <div className="flex flex-col md:flex-row gap-4">
                   <button onClick={() => setStatus('idle')} className="w-full py-5 md:py-6 bg-transparent border-2 border-navy-900 dark:border-white/20 text-navy-900 dark:text-white rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-xl hover:bg-navy-900 hover:text-white transition-all">New Scan</button>
-                  {analysisResult.optimizedData && (
+                  {/* Case 1: Builder Data Detected (Metadata found) */}
+                  {analysisResult.extractedData && (
                     <button
                       onClick={() => {
-                        if (confirm("This will replace your current Resume Builder data with the optimized version and open the print dialog. Continue?")) {
-                          localStorage.setItem('nextstep_resume_data', JSON.stringify(analysisResult.optimizedData));
+                        if (confirm("This will load this resume into the Builder so you can apply improvements and export the new PDF. Unsaved changes in the Builder will be replaced. Continue?")) {
+                          localStorage.setItem('nextstep_resume_data', JSON.stringify(analysisResult.extractedData));
                           window.location.href = '/?autoprint=true#builder';
                         }
                       }}
-                      className="w-full py-5 md:py-6 bg-brand-500 text-white rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/30 flex items-center justify-center gap-3"
+                      className="w-full py-5 md:py-6 bg-brand-500 text-white rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-xl hover:bg-brand-600 transition-all shadow-xl shadow-brand-500/30 flex items-center justify-center gap-3 animate-pulse-subtle"
                     >
-                      <i className="fas fa-file-export"></i> Apply Fixes & Export PDF
+                      <i className="fas fa-magic"></i> Improve & Export PDF
                     </button>
+                  )}
+
+                  {/* Case 2: No Metadata (Raw File) */}
+                  {!analysisResult.extractedData && (
+                    <div className="w-full relative group">
+                      <button
+                        disabled
+                        className="w-full py-5 md:py-6 bg-slate-200 dark:bg-white/5 text-slate-400 dark:text-slate-500 rounded-2xl md:rounded-[2.5rem] font-black text-lg md:text-xl cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        <i className="fas fa-lock"></i> Auto-Fix Unavailable
+                      </button>
+                      <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-64 p-3 bg-navy-900 text-white text-xs rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20 text-center">
+                        Full optimization requires resumes built with NextStep. Create one to enable smart features.
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
