@@ -99,39 +99,89 @@ const LINKEDIN_REGEX = /linkedin\.com\/in\/[a-zA-Z0-9_-]+/;
 
 /**
  * Heuristic Parser for Raw Text (Best Effort)
+ * Extracts what it can and puts full text in summary for user review
  */
 function parseResumeFromText(text: string): ResumeData {
     const emailMatch = text.match(EMAIL_REGEX);
     const phoneMatch = text.match(PHONE_REGEX);
     const linkedinMatch = text.match(LINKEDIN_REGEX);
 
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+    // Try to extract name from first non-empty line that doesn't look like contact info
+    let fullName = "Imported User";
+    for (const line of lines.slice(0, 5)) {
+        // Skip lines that look like email, phone, or URL
+        if (EMAIL_REGEX.test(line) || PHONE_REGEX.test(line) || /https?:\/\//.test(line) || /linkedin/i.test(line)) {
+            continue;
+        }
+        // Name is likely short (2-4 words) and contains mostly letters
+        const words = line.split(/\s+/);
+        if (words.length >= 2 && words.length <= 5 && /^[A-Za-z\s'-]+$/.test(line)) {
+            fullName = line;
+            break;
+        }
+    }
+
     // Skill extraction
     const foundSkills = COMMON_SKILLS.filter(skill =>
         text.toLowerCase().includes(skill.toLowerCase())
     );
 
-    // Naive split for experience/education (very rough)
-    // We mainly want to capture contact info and skills to save user time
+    // Put full text in summary so user can see and reorganize
+    const summaryText = text.length > 2000
+        ? text.substring(0, 2000) + "... (truncated, please review and edit)"
+        : text;
+
+    // Try to extract a generic experience entry
+    const experience: any[] = [];
+    const expMatch = text.match(/experience|work history|employment/i);
+    if (expMatch) {
+        experience.push({
+            id: Date.now(),
+            title: "Role (Please Edit)",
+            company: "Company (Please Edit)",
+            location: "",
+            startDate: "",
+            endDate: "Present",
+            bullets: ["Review your original PDF and add your experience details here."]
+        });
+    }
+
+    // Try to extract a generic education entry
+    const education: any[] = [];
+    const eduMatch = text.match(/education|university|college|degree|bachelor|master/i);
+    if (eduMatch) {
+        education.push({
+            id: Date.now() + 1,
+            institution: "Institution (Please Edit)",
+            degree: "Degree (Please Edit)",
+            field: "",
+            graduationDate: "",
+            gpa: ""
+        });
+    }
 
     return {
         // @ts-ignore
         source: 'parser',
-        fullName: "Imported User", // Hard to extract name reliably without NLP
+        fullName,
         email: emailMatch ? emailMatch[0] : "",
         phone: phoneMatch ? phoneMatch[0] : "",
         location: "",
         website: "",
         linkedin: linkedinMatch ? linkedinMatch[0] : "",
         targetRole: "Professional",
-        summary: "Imported from PDF. Please review your details.",
-        experience: [], // Leave empty for user to fill
-        education: [],
+        summary: summaryText,
+        experience,
+        education,
         hardSkills: foundSkills.join(", "),
         softSkills: "",
         certifications: [],
         languages: []
     };
 }
+
 
 /**
  * Main Entry Point: Calculate ATS Score
