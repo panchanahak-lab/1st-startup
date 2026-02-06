@@ -6,55 +6,13 @@ import { useLocation } from 'react-router-dom';
 import { verifyCredits, ToolAccessError } from '../lib/toolAccess';
 import { CREDIT_COSTS } from '../lib/pricing';
 import { useAuth } from '../lib/AuthContext';
+import { ResumeData, EducationItem, ExperienceItem, LanguageItem, CertificationItem } from '../types';
+import { calculateATSScore, METADATA_START_MARKER, METADATA_END_MARKER } from '../lib/atsScoring';
 
 // --- TYPES ---
 
-interface EducationItem {
-  id: number;
-  degree: string;
-  school: string;
-  year: string;
-  grade: string;
-}
 
-interface ExperienceItem {
-  id: number;
-  role: string;
-  company: string;
-  location: string;
-  date: string;
-  bullets: string[];
-}
-
-interface LanguageItem {
-  id: number;
-  name: string;
-  level: string;
-}
-
-interface CertificationItem {
-  id: number;
-  name: string;
-  issuer: string;
-  date: string;
-}
-
-interface ResumeData {
-  fullName: string;
-  phone: string;
-  email: string;
-  location: string;
-  linkedin: string;
-  website: string;
-  targetRole: string;
-  summary: string;
-  education: EducationItem[];
-  experience: ExperienceItem[];
-  hardSkills: string;
-  softSkills: string;
-  certifications: CertificationItem[];
-  languages: LanguageItem[];
-}
+// Local types removed, using shared types from ../types.ts
 
 type TemplateType = 'classic' | 'modern' | 'creative' | 'academic';
 
@@ -100,6 +58,29 @@ const EMPTY_DATA: ResumeData = {
 };
 
 const PROFICIENCY_LEVELS = ['Native', 'Fluent', 'Professional', 'Conversational', 'Elementary'];
+
+// Helper for Metadata Injection
+const MetadataInjector = ({ data }: { data: ResumeData }) => (
+  <div
+    className="pdf-metadata"
+    style={{
+      opacity: 0,
+      height: '1px',
+      width: '1px',
+      overflow: 'hidden',
+      position: 'absolute',
+      whiteSpace: 'pre',
+      fontSize: '1px',
+      color: 'transparent',
+      zIndex: -1,
+      pointerEvents: 'none'
+    }}
+  >
+    {METADATA_START_MARKER}
+    {JSON.stringify({ source: 'builder', version: '1.0', ...data })}
+    {METADATA_END_MARKER}
+  </div>
+);
 
 const ResumeBuilder: React.FC = () => {
   const clone = <T,>(obj: T): T => JSON.parse(JSON.stringify(obj));
@@ -286,7 +267,8 @@ const ResumeBuilder: React.FC = () => {
   // --- TEMPLATES ---
 
   const ClassicTemplate = () => (
-    <div className="p-[20mm] text-slate-900 flex flex-col font-sans text-[11pt] bg-white h-full min-h-[290mm]">
+    <div className="p-[20mm] text-slate-900 flex flex-col font-sans text-[11pt] bg-white h-full min-h-[290mm] relative">
+      <MetadataInjector data={data} />
       <header className="border-b-2 border-slate-900 pb-4 md:pb-6 mb-6 md:mb-8 text-center">
         <h1 className="text-4xl font-bold uppercase mb-2 tracking-tight">{data.fullName || 'YOUR NAME'}</h1>
         <h2 className="text-lg font-bold text-brand-600 uppercase tracking-[0.2em]">{data.targetRole || 'TARGET ROLE'}</h2>
@@ -352,7 +334,8 @@ const ResumeBuilder: React.FC = () => {
   );
 
   const ModernTemplate = () => (
-    <div className="flex flex-row bg-white h-full min-h-[290mm] font-sans">
+    <div className="flex flex-row bg-white h-full min-h-[290mm] font-sans relative">
+      <MetadataInjector data={data} />
       <div className="w-[32%] bg-navy-950 p-10 text-white">
         <div className="mb-12">
           <h1 className="text-3xl font-black uppercase tracking-tighter leading-none mb-4">{data.fullName || 'NAME'}</h1>
@@ -455,7 +438,8 @@ const ResumeBuilder: React.FC = () => {
   );
 
   const CreativeTemplate = () => (
-    <div className="bg-white h-full min-h-[290mm] font-sans text-slate-800">
+    <div className="bg-white h-full min-h-[290mm] font-sans text-slate-800 relative">
+      <MetadataInjector data={data} />
       <header className="bg-gradient-to-br from-navy-900 to-navy-950 p-16 text-white text-center relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-brand-500/10 rounded-full -mr-32 -mt-32"></div>
         <h1 className="text-6xl font-black uppercase tracking-tighter mb-4 relative z-10">{data.fullName || 'YOUR NAME'}</h1>
@@ -553,7 +537,8 @@ const ResumeBuilder: React.FC = () => {
   );
 
   const AcademicTemplate = () => (
-    <div className="p-[25mm] bg-white h-full min-h-[290mm] font-serif text-slate-900">
+    <div className="p-[25mm] bg-white h-full min-h-[290mm] font-serif text-slate-900 relative">
+      <MetadataInjector data={data} />
       <header className="text-center mb-16">
         <h1 className="text-4xl font-bold mb-4 tracking-tight">{data.fullName || 'YOUR NAME'}</h1>
         <div className="flex flex-wrap justify-center gap-8 text-sm italic text-slate-400">
@@ -817,35 +802,42 @@ const ResumeBuilder: React.FC = () => {
           {/* PREVIEW PANEL */}
           <div className={`flex-1 min-w-0 flex flex-col items-center bg-slate-100/30 dark:bg-navy-900/40 rounded-[2rem] md:rounded-[3rem] border border-slate-200 dark:border-white/10 p-4 md:p-8 min-h-[500px] md:min-h-[900px] ${viewMode === 'editor' ? 'hidden md:flex' : 'flex'}`}>
             <div className="w-full mb-6 md:mb-12 flex flex-col sm:flex-row items-center justify-between gap-4 md:gap-8 print:hidden">
-              <div className="flex bg-white dark:bg-navy-950 rounded-xl md:rounded-2xl shadow-xl p-1 md:p-1.5 border border-slate-200 dark:border-white/10 overflow-x-auto max-w-full no-scrollbar">
-                {['classic', 'modern', 'creative', 'academic'].map(t => (
-                  <button key={t} onClick={() => setActiveTemplate(t as TemplateType)} className={`whitespace-nowrap px-4 md:px-6 py-2 md:py-2.5 text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] rounded-lg md:rounded-xl transition-all ${activeTemplate === t ? 'bg-brand-500 text-white shadow-lg' : 'text-slate-400 hover:text-navy-900 dark:hover:text-white'}`}>{t}</button>
-                ))}
+              <div className="flex items-center gap-4">
+                <div className="hidden md:flex items-center gap-2 bg-white dark:bg-navy-950 px-4 py-2 rounded-xl shadow-sm border border-slate-200 dark:border-white/10">
+                  <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Live ATS Score:</span>
+                  <span className={`text-lg font-black ${calculateATSScore(data).overallScore >= 90 ? 'text-green-500' : 'text-amber-500'}`}>
+                    {calculateATSScore(data).overallScore}
+                  </span>
+                </div>
+                <div className="flex bg-white dark:bg-navy-950 rounded-xl md:rounded-2xl shadow-xl p-1 md:p-1.5 border border-slate-200 dark:border-white/10 overflow-x-auto max-w-full no-scrollbar">
+                  {['classic', 'modern', 'creative', 'academic'].map(t => (
+                    <button key={t} onClick={() => setActiveTemplate(t as TemplateType)} className={`whitespace-nowrap px-4 md:px-6 py-2 md:py-2.5 text-[8px] md:text-[10px] font-black uppercase tracking-[0.1em] md:tracking-[0.2em] rounded-lg md:rounded-xl transition-all ${activeTemplate === t ? 'bg-brand-500 text-white shadow-lg' : 'text-slate-400 hover:text-navy-900 dark:hover:text-white'}`}>{t}</button>
+                  ))}
+                </div>
+                <button onClick={handleDownload} className="w-full sm:w-auto btn-premium bg-navy-900 dark:bg-brand-500 text-white px-8 md:px-10 py-3 md:py-4 rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-sm shadow-2xl flex items-center justify-center gap-2 md:gap-3"><i className="fas fa-file-pdf"></i> Export PDF</button>
               </div>
-              <button onClick={handleDownload} className="w-full sm:w-auto btn-premium bg-navy-900 dark:bg-brand-500 text-white px-8 md:px-10 py-3 md:py-4 rounded-xl md:rounded-[1.5rem] font-black text-[10px] md:text-sm shadow-2xl flex items-center justify-center gap-2 md:gap-3"><i className="fas fa-file-pdf"></i> Export PDF</button>
-            </div>
 
-            <div className="w-full flex justify-center flex-grow relative pb-20 md:pb-32 overflow-hidden md:overflow-visible">
-              <div
-                ref={previewRef}
-                className="bg-white shadow-2xl origin-top transition-all duration-500 printable-content relative"
-                style={{
-                  width: '210mm',
-                  minHeight: '297mm',
-                  transform: `scale(${previewScale})`,
-                  marginBottom: `-${(1 - previewScale) * 100}%`
-                }}
-              >
-                {activeTemplate === 'classic' && <ClassicTemplate />}
-                {activeTemplate === 'modern' && <ModernTemplate />}
-                {activeTemplate === 'creative' && <CreativeTemplate />}
-                {activeTemplate === 'academic' && <AcademicTemplate />}
+              <div className="w-full flex justify-center flex-grow relative pb-20 md:pb-32 overflow-hidden md:overflow-visible">
+                <div
+                  ref={previewRef}
+                  className="bg-white shadow-2xl origin-top transition-all duration-500 printable-content relative"
+                  style={{
+                    width: '210mm',
+                    minHeight: '297mm',
+                    transform: `scale(${previewScale})`,
+                    marginBottom: `-${(1 - previewScale) * 100}%`
+                  }}
+                >
+                  {activeTemplate === 'classic' && <ClassicTemplate />}
+                  {activeTemplate === 'modern' && <ModernTemplate />}
+                  {activeTemplate === 'creative' && <CreativeTemplate />}
+                  {activeTemplate === 'academic' && <AcademicTemplate />}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      {printRoot && ReactDOM.createPortal(printContent, printRoot)}
+        {printRoot && ReactDOM.createPortal(printContent, printRoot)}
     </section>
   );
 };

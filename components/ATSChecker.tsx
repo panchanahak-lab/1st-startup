@@ -1,32 +1,22 @@
 
 import React, { useState, useRef } from 'react';
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import * as pdfjsLib from 'pdfjs-dist';
 import { verifyCredits, ToolAccessError } from '../lib/toolAccess';
 import { CREDIT_COSTS } from '../lib/pricing';
 import { useAuth } from '../lib/AuthContext';
+import { calculateATSScore, ATSScoreResult, ATSIssue } from '../lib/atsScoring';
+
+// Initialize PDF.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 interface ATSCheckerProps {
   isLoggedIn: boolean;
   onOpenAuth: (mode: 'signin' | 'signup') => void;
 }
 
-interface AnalysisResult {
-  overallScore: number;
-  sectionScores: {
-    summary: number;
-    experience: number;
-    education: number;
-    skills: number;
-  };
-  issues: {
-    title: string;
-    location: string;
-    description: string;
-    highlight: string;
-    suggestion: string;
-    severity: 'critical' | 'warning' | 'info';
-  }[];
-  optimizedData?: any; // Full ResumeData object
+// Use the result type from our scoring engine
+interface AnalysisResult extends ATSScoreResult {
+  optimizedData?: any;
 }
 
 const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
@@ -46,9 +36,7 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
     } catch (e: any) {
       setStatus('idle');
       console.error("Credit check failed:", e);
-
       if (e.code === 'NO_CREDITS' || e.code === 'INSUFFICIENT_CREDITS') {
-        // TODO: ideally show a Premium Modal here
         alert(`You need more credits to use this feature. ${e.message}`);
       } else {
         alert(e.message || "An unexpected error occurred while checking credits.");
@@ -56,88 +44,37 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
       return;
     }
 
-    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-    if (!apiKey) {
-      alert("API Key missing. Please check configuration.");
-      setStatus('idle');
-      return;
-    }
-
     try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({
-        model: 'gemini-2.5-flash',
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0,
-        }
+      // Read file as ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+
+      // Load PDF Document
+      const loadingTask = pdfjsLib.getDocument(arrayBuffer);
+      const pdf = await loadingTask.promise;
+
+      let fullText = '';
+
+      // Extract text from all pages
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map((item: any) => item.str).join(' ');
+        fullText += pageText + '\n';
+      }
+
+      console.log("Extracted Text Length:", fullText.length);
+
+      // deterministic Scoring
+      const result = calculateATSScore(fullText, jobDescription);
+
+      setAnalysisResult({
+        ...result,
+        optimizedData: undefined // No AI optimization in this pass
       });
-
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onload = async () => {
-        try {
-          const base64 = (reader.result as string).split(',')[1];
-          const result = await model.generateContent([
-            {
-              inlineData: {
-                data: base64,
-                mimeType: file.type || 'application/pdf'
-              }
-            },
-            `Analyze this resume against JD: ${jobDescription}. 
-            1. STRICT SCORING (0-100) based on CONTENT MATCH:
-               - Keyword Match (0-30): Rate how well resume skills/terms match the JD.
-               - Impact & Experience (0-30): Rate specific achievements and quantifiable results (Action-Verb + Result).
-               - Formatting & Structure (0-20): Rate readability, section headers, and structure.
-               - Completeness (0-20): Contact info, education, required sections.
-               - Penalties: -5 for each critical missing keyword or section.
-               - TOTAL must equal the sum of these 4 categories minus penalties.
-            2. Identify 3-5 critical structural gaps.
-            3. CRITICAL: Generate a fully optimized version of the resume data (optimizedData) that:
-            2. Identify 3-5 critical structural gaps.
-            3. CRITICAL: Generate a fully optimized version of the resume data (optimizedData) that:
-               - Fixes all parsing issues.
-               - EXTRACTS HIGH-VALUE KEYWORDS from the JD and naturally weaves them into the Summary, Skills, and Experience sections.
-               - Rewrites bullets using strong Action Verbs and the Star/XYZ method (Action + Task + Result) to maximize impact.
-               - Ensures the resume is fully ATS-compliant and tailored for the specific role.
-            
-            Return JSON matching this schema:
-            {
-              overallScore: number,
-              sectionScores: { summary, experience, education, skills },
-              issues: [{ title, location, description, highlight, suggestion, severity }],
-              optimizedData: {
-                fullName: string, targetRole: string, email: string, phone: string, location: string, linkedin: string, website: string, summary: string,
-                hardSkills: string, softSkills: string,
-                experience: [{ id: number, role: string, company: string, location: string, date: string, bullets: string[] }],
-                education: [{ id: number, degree: string, school: string, year: string, grade: string }],
-                certifications: [{ id: number, name: string, issuer: string, date: string }],
-                languages: [{ id: number, name: string, level: string }]
-              }
-            }`
-          ]);
-
-          const text = result.response.text();
-          // Clean potential markdown fences
-          const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-
-          setAnalysisResult(JSON.parse(cleanJson));
-          setStatus('complete');
-        } catch (innerError) {
-          console.error("Analysis failed:", innerError);
-          setStatus('error');
-        }
-      };
-
-      reader.onerror = () => {
-        console.error("File reading failed");
-        setStatus('error');
-      };
+      setStatus('complete');
 
     } catch (e) {
-      console.error("Setup failed:", e);
+      console.error("Analysis failed:", e);
       setStatus('error');
     }
   };

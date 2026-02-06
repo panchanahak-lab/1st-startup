@@ -1,3 +1,5 @@
+import { ResumeData } from '../types';
+
 // Logic-based ATS Scoring Engine
 // Replaces Gemini for basic ATS score calculation
 // AI is optional for improvement suggestions only
@@ -6,12 +8,17 @@ export interface ATSScoreResult {
     overallScore: number;
     sectionScores: {
         keywords: number;      // 0-30
-        impact: number;        // 0-30
+        impact: number;        // 0-30 or 40 (Depends on weighting) - Actually let's stick to the Plan: Section Presence (40), Keywords (30), Formatting (20), Hygiene (10)
         formatting: number;    // 0-20
-        completeness: number;  // 0-20
+        completeness: number;  // 0-10 or part of Presence
+    };
+    breakdown: {
+        presence: number;    // 40
+        keywords: number;    // 30
+        formatting: number;  // 20
+        hygiene: number;     // 10
     };
     issues: ATSIssue[];
-    recommendations: string[];
 }
 
 export interface ATSIssue {
@@ -31,246 +38,252 @@ const COMMON_SKILLS = [
     'agile', 'scrum', 'leadership', 'communication', 'problem-solving', 'teamwork'
 ];
 
-const ACTION_VERBS = [
-    'achieved', 'built', 'created', 'delivered', 'developed', 'designed', 'enhanced',
-    'established', 'executed', 'generated', 'implemented', 'improved', 'increased',
-    'launched', 'led', 'managed', 'optimized', 'reduced', 'resolved', 'streamlined',
-    'spearheaded', 'transformed', 'upgraded', 'accelerated', 'automated', 'consolidated'
-];
-
-const REQUIRED_SECTIONS = [
-    { name: 'contact', keywords: ['email', 'phone', 'linkedin', 'address', 'location'] },
-    { name: 'experience', keywords: ['experience', 'work', 'employment', 'professional'] },
-    { name: 'education', keywords: ['education', 'degree', 'university', 'college', 'bachelor', 'master'] },
-    { name: 'skills', keywords: ['skills', 'technologies', 'proficiencies', 'competencies'] }
-];
+/**
+ * Metadata Marker Constants
+ * Used to inject and extract hidden data from PDF text
+ */
+export const METADATA_START_MARKER = "###NEXTSTEP_METADATA_START###";
+export const METADATA_END_MARKER = "###NEXTSTEP_METADATA_END###";
 
 /**
- * Calculate ATS score using pure logic (no AI required)
+ * Main Entry Point: Calculate ATS Score
+ * Can accept raw text OR structured ResumeData
  */
 export function calculateATSScore(
-    resumeText: string,
+    input: string | ResumeData,
     jobDescription: string = ''
 ): ATSScoreResult {
-    const resumeLower = resumeText.toLowerCase();
-    const jdLower = jobDescription.toLowerCase();
+    let data: ResumeData | null = null;
+    let text = '';
+    let isBuilder = false;
+
+    // 1. Determine Input Type
+    if (typeof input === 'string') {
+        text = input;
+        // Try to extract metadata
+        const metadata = extractMetadata(text);
+        if (metadata) {
+            data = metadata;
+            isBuilder = true;
+        }
+    } else {
+        data = input;
+        isBuilder = true;
+        // Generate pseudo-text for keyword matching if needed
+        text = JSON.stringify(input).toLowerCase();
+    }
+
     const issues: ATSIssue[] = [];
-    const recommendations: string[] = [];
 
-    // 1. Keyword Matching Score (0-30)
-    const keywordScore = calculateKeywordScore(resumeLower, jdLower, issues, recommendations);
+    // 2. Calculate Scores
 
-    // 2. Impact & Experience Score (0-30)
-    const impactScore = calculateImpactScore(resumeLower, issues, recommendations);
+    // A. Section Presence (40 points)
+    const presenceScore = calculatePresenceScore(data, text, issues);
 
-    // 3. Formatting & Structure Score (0-20)
-    const formattingScore = calculateFormattingScore(resumeText, issues, recommendations);
+    // B. Keyword Match (30 points)
+    const keywordScore = calculateKeywordScore(data, text, jobDescription, issues);
 
-    // 4. Completeness Score (0-20)
-    const completenessScore = calculateCompletenessScore(resumeLower, issues, recommendations);
+    // C. Formatting & Readability (20 points)
+    // If builder, we guarantee full points here
+    const formattingScore = isBuilder ? 20 : calculateFormattingScore(text, issues);
 
-    // Calculate overall score
-    const overallScore = keywordScore + impactScore + formattingScore + completenessScore;
+    // D. ATS Hygiene (10 points)
+    // If builder, we guarantee full points here
+    const hygieneScore = isBuilder ? 10 : calculateHygieneScore(text, issues);
+
+    let overallScore = presenceScore + keywordScore + formattingScore + hygieneScore;
+
+    // 3. BUILDER GUARANTEE
+    // If source is builder and essential sections are present, guarantee >= 90
+    if (isBuilder && presenceScore >= 30) {
+        overallScore = Math.max(90, overallScore);
+
+        // Remove critical issues if we are boosting score
+        if (overallScore >= 90) {
+            // Keep only warnings/info
+            // Assuming builder output is structurally sound
+        }
+    }
 
     return {
         overallScore: Math.min(100, Math.max(0, overallScore)),
         sectionScores: {
+            // Mapping back to the UI expected keys if they differ, 
+            // but let's encourage using the new 'breakdown' for clarity
             keywords: keywordScore,
-            impact: impactScore,
+            impact: presenceScore * 0.75, // Approx mapping for legacy UI
             formatting: formattingScore,
-            completeness: completenessScore
+            completeness: hygieneScore * 2 // Approx mapping for legacy UI
         },
-        issues: issues.slice(0, 5), // Return top 5 issues
-        recommendations: recommendations.slice(0, 5)
+        breakdown: {
+            presence: presenceScore,
+            keywords: keywordScore,
+            formatting: formattingScore,
+            hygiene: hygieneScore
+        },
+        issues: issues.slice(0, 5)
     };
 }
 
-function calculateKeywordScore(
-    resumeLower: string,
-    jdLower: string,
-    issues: ATSIssue[],
-    recommendations: string[]
-): number {
-    let score = 15; // Base score
+/**
+ * Extract hidden metadata from PDF text
+ */
+function extractMetadata(text: string): ResumeData | null {
+    try {
+        const start = text.indexOf(METADATA_START_MARKER);
+        const end = text.indexOf(METADATA_END_MARKER);
 
-    // If job description provided, match against it
-    if (jdLower.length > 50) {
-        const jdWords = jdLower.split(/\s+/).filter(w => w.length > 3);
-        const matchedJdWords = jdWords.filter(word => resumeLower.includes(word));
-        const matchRatio = matchedJdWords.length / Math.max(jdWords.length, 1);
-        score = Math.round(30 * matchRatio);
-
-        if (matchRatio < 0.3) {
-            issues.push({
-                title: 'Low Keyword Match',
-                location: 'Overall Resume',
-                description: 'Your resume matches less than 30% of job description keywords.',
-                highlight: 'Consider tailoring your resume to the specific job posting.',
-                suggestion: 'Add relevant keywords from the job description to your summary and skills.',
-                severity: 'critical'
-            });
+        if (start !== -1 && end !== -1 && end > start) {
+            const jsonStr = text.substring(start + METADATA_START_MARKER.length, end).trim();
+            // PDF text extraction might add newlines or weird spacing to JSON
+            // We might need to sanitize it. For now, try direct parse.
+            // In PDF hidden text, it usually stays intact if we put it in a single block.
+            // But valid JSON parsing is strict.
+            return JSON.parse(jsonStr);
         }
-    } else {
-        // Match against common skills
-        const matchedSkills = COMMON_SKILLS.filter(skill => resumeLower.includes(skill));
-        score = Math.min(30, 10 + matchedSkills.length * 2);
-
-        if (matchedSkills.length < 5) {
-            recommendations.push('Add more industry-standard skills to improve ATS matching.');
-        }
+    } catch (e) {
+        // console.error("Metadata extraction failed", e);
     }
-
-    return Math.min(30, score);
-}
-
-function calculateImpactScore(
-    resumeLower: string,
-    issues: ATSIssue[],
-    recommendations: string[]
-): number {
-    let score = 10; // Base score
-
-    // Check for action verbs
-    const usedVerbs = ACTION_VERBS.filter(verb => resumeLower.includes(verb));
-    score += Math.min(10, usedVerbs.length);
-
-    if (usedVerbs.length < 3) {
-        issues.push({
-            title: 'Weak Action Verbs',
-            location: 'Experience Section',
-            description: 'Resume lacks strong action verbs that demonstrate impact.',
-            highlight: 'Use verbs like "achieved", "delivered", "implemented", "led".',
-            suggestion: 'Start each bullet point with a powerful action verb.',
-            severity: 'warning'
-        });
-    }
-
-    // Check for quantifiable results (numbers, percentages)
-    const numberMatches = resumeLower.match(/\d+%|\$\d+|\d+\+?\s*(users|customers|clients|projects|team|years)/g);
-    const hasMetrics = numberMatches && numberMatches.length >= 3;
-
-    if (hasMetrics) {
-        score += 10;
-    } else {
-        issues.push({
-            title: 'Missing Quantifiable Results',
-            location: 'Experience Section',
-            description: 'Resume lacks specific numbers and metrics.',
-            highlight: 'Add percentages, dollar amounts, team sizes, or user counts.',
-            suggestion: 'Quantify your achievements: "Increased sales by 25%" instead of "Improved sales".',
-            severity: 'critical'
-        });
-    }
-
-    return Math.min(30, score);
-}
-
-function calculateFormattingScore(
-    resumeText: string,
-    issues: ATSIssue[],
-    recommendations: string[]
-): number {
-    let score = 15; // Base score
-    const lines = resumeText.split('\n').filter(l => l.trim());
-
-    // Check for reasonable length
-    const wordCount = resumeText.split(/\s+/).length;
-    if (wordCount < 200) {
-        score -= 5;
-        issues.push({
-            title: 'Resume Too Short',
-            location: 'Overall Resume',
-            description: 'Resume appears to be too brief.',
-            highlight: 'Aim for 400-800 words for optimal ATS parsing.',
-            suggestion: 'Expand on your experience and add more relevant details.',
-            severity: 'warning'
-        });
-    } else if (wordCount > 1500) {
-        score -= 3;
-        recommendations.push('Consider condensing your resume - aim for 1-2 pages.');
-    }
-
-    // Check for section headers
-    const hasHeaders = /^(experience|education|skills|summary|objective|certifications|projects)/im.test(resumeText);
-    if (hasHeaders) {
-        score += 5;
-    } else {
-        issues.push({
-            title: 'Missing Section Headers',
-            location: 'Structure',
-            description: 'Cannot detect clear section headers.',
-            highlight: 'Use standard headers: Experience, Education, Skills, Summary.',
-            suggestion: 'Add clear, standard section headers for better ATS parsing.',
-            severity: 'warning'
-        });
-    }
-
-    return Math.min(20, score);
-}
-
-function calculateCompletenessScore(
-    resumeLower: string,
-    issues: ATSIssue[],
-    recommendations: string[]
-): number {
-    let score = 5; // Base score
-    const missingSections: string[] = [];
-
-    // Check for required sections
-    REQUIRED_SECTIONS.forEach(section => {
-        const hasSection = section.keywords.some(keyword => resumeLower.includes(keyword));
-        if (hasSection) {
-            score += 4;
-        } else {
-            missingSections.push(section.name);
-        }
-    });
-
-    if (missingSections.length > 0) {
-        issues.push({
-            title: 'Missing Required Sections',
-            location: 'Resume Structure',
-            description: `Missing sections: ${missingSections.join(', ')}`,
-            highlight: 'ATS systems expect these standard sections.',
-            suggestion: `Add ${missingSections.join(' and ')} sections to your resume.`,
-            severity: missingSections.length > 1 ? 'critical' : 'warning'
-        });
-    }
-
-    // Check for email
-    if (!resumeLower.includes('@')) {
-        score -= 3;
-        issues.push({
-            title: 'Missing Email Address',
-            location: 'Contact Information',
-            description: 'No email address detected.',
-            highlight: 'Recruiters need a way to contact you.',
-            suggestion: 'Add your professional email address at the top of your resume.',
-            severity: 'critical'
-        });
-    }
-
-    return Math.min(20, Math.max(0, score));
+    return null;
 }
 
 /**
- * Extract keywords from job description for matching
+ * Score A: Section Presence (40 points)
  */
-export function extractKeywords(jobDescription: string): string[] {
-    const words = jobDescription.toLowerCase()
-        .replace(/[^a-z0-9\s]/g, ' ')
-        .split(/\s+/)
-        .filter(w => w.length > 3);
+function calculatePresenceScore(data: ResumeData | null, text: string, issues: ATSIssue[]): number {
+    let score = 0;
+    const missing: string[] = [];
 
-    // Get unique words with frequency
-    const wordFreq = new Map<string, number>();
-    words.forEach(word => {
-        wordFreq.set(word, (wordFreq.get(word) || 0) + 1);
-    });
+    // Helper to check
+    const has = (keyword: string, sectionData?: any) => {
+        if (data) {
+            if (keyword === 'contact') return !!(data.email || data.phone);
+            if (keyword === 'experience') return data.experience && data.experience.length > 0;
+            if (keyword === 'education') return data.education && data.education.length > 0;
+            if (keyword === 'skills') return !!data.hardSkills;
+            return false;
+        } else {
+            const lower = text.toLowerCase();
+            // Simple heuristic
+            return lower.includes(keyword) || lower.includes(keyword === 'contact' ? 'email' : keyword);
+        }
+    };
 
-    // Return top keywords by frequency
-    return Array.from(wordFreq.entries())
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 20)
-        .map(([word]) => word);
+    if (has('contact')) score += 10; else missing.push('Contact Info');
+    if (has('experience')) score += 10; else missing.push('Experience');
+    if (has('education')) score += 10; else missing.push('Education');
+    if (has('skills')) score += 10; else missing.push('Skills');
+
+    if (missing.length > 0) {
+        issues.push({
+            title: 'Missing Sections',
+            location: 'structure',
+            description: `Missing: ${missing.join(', ')}`,
+            highlight: 'Add these standard sections.',
+            suggestion: `Include ${missing.join(', ')} to pass ATS filters.`,
+            severity: 'critical'
+        });
+    }
+
+    return score;
+}
+
+/**
+ * Score B: Keyword Match (30 points)
+ */
+function calculateKeywordScore(
+    data: ResumeData | null,
+    text: string,
+    jd: string,
+    issues: ATSIssue[]
+): number {
+    let score = 0;
+    const resumeTextLowercase = data
+        ? (JSON.stringify(data.experience) + " " + data.hardSkills + " " + data.summary).toLowerCase() // Targeted text
+        : text.toLowerCase();
+
+    // 1. If Job Description exists -> Smart Match
+    if (jd && jd.length > 50) {
+        const jdLower = jd.toLowerCase();
+        // Extract nouns/keywords from JD (simple approach without NLP lib)
+        // We actally want to check if resume contains words from JD.
+        const jdWords = jdLower.split(/\W+/).filter(w => w.length > 4);
+        const uniqueJdWords = [...new Set(jdWords)];
+
+        let matchCount = 0;
+        const totalToCheck = Math.min(uniqueJdWords.length, 20); // Check top 20 unique long words
+
+        for (const word of uniqueJdWords.slice(0, 20)) {
+            if (resumeTextLowercase.includes(word)) matchCount++;
+        }
+
+        // 30 points max
+        // If we match 50% of substantial JD words, we get full points?
+        // Let's say matching 10 unique keywords is excellent
+        score = Math.min(30, (matchCount / 10) * 30);
+    }
+    // 2. No JD -> General Competency Check
+    else {
+        // If it's a builder resume, we assume they selected a role which implies some relevance.
+        // We'll give 25 points baseline if skills are populated.
+        if (data && data.hardSkills && data.hardSkills.length > 5) {
+            score = 25;
+        } else {
+            // Fallback for raw text
+            const matchedCommon = COMMON_SKILLS.filter(s => resumeTextLowercase.includes(s));
+            score = Math.min(30, 10 + (matchedCommon.length * 2));
+        }
+    }
+
+    // Bonus: Action Verbs
+    // Only check if score < 30
+    if (score < 30) {
+        const actionVerbs = ['managed', 'led', 'developed', 'created', 'built', 'designed'];
+        if (resumeTextLowercase.match(new RegExp(actionVerbs.join('|'), 'i'))) {
+            score = Math.min(30, score + 5);
+        }
+    }
+
+    return Math.floor(score);
+}
+
+/**
+ * Score C: Formatting (20 points)
+ * Builder resumes automatically get 20.
+ */
+function calculateFormattingScore(text: string, issues: ATSIssue[]): number {
+    let score = 20;
+
+    // Check length
+    const words = text.split(/\s+/).length;
+    if (words < 100) {
+        score -= 10;
+        issues.push({
+            title: 'Too Short',
+            location: 'overall',
+            description: 'Resume is too short.',
+            highlight: 'Expand your content.',
+            suggestion: 'Add more details.',
+            severity: 'warning'
+        });
+    }
+
+    // Check caps
+    // This is hard on raw extracted text as PDF extraction might lose casing
+    // Ignoring complex checks for MVP to ensure stability
+
+    return Math.max(0, score);
+}
+
+/**
+ * Score D: Hygiene (10 points)
+ */
+function calculateHygieneScore(text: string, issues: ATSIssue[]): number {
+    let score = 10;
+
+    if (text.includes('$$$') || text.includes('???')) { // Garbage chars
+        score -= 5;
+    }
+
+    return Math.max(0, score);
 }

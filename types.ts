@@ -35,3 +35,50 @@ export interface JobApplication {
   status: JobStatus;
   dateAdded: string;
 }
+
+export interface EducationItem {
+  id: number;
+  degree: string;
+  school: string;
+  year: string;
+  grade: string;
+}
+
+export interface ExperienceItem {
+  id: number;
+  role: string;
+  company: string;
+  location: string;
+  date: string;
+  bullets: string[];
+}
+
+export interface LanguageItem {
+  id: number;
+  name: string;
+  level: string;
+}
+
+export interface CertificationItem {
+  id: number;
+  name: string;
+  issuer: string;
+  date: string;
+}
+
+export interface ResumeData {
+  fullName: string;
+  phone: string;
+  email: string;
+  location: string;
+  linkedin: string;
+  website: string;
+  targetRole: string;
+  summary: string;
+  education: EducationItem[];
+  experience: ExperienceItem[];
+  hardSkills: string;
+  softSkills: string;
+  certifications: CertificationItem[];
+  languages: LanguageItem[];
+}
