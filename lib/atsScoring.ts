@@ -213,7 +213,7 @@ export function calculateATSScore(
             hygiene: hygieneScore
         },
         issues: issues.slice(0, 5),
-        extractedData: isBuilder ? (data || undefined) : undefined // Pass back data if we successfully extracted it
+        extractedData: data || undefined // Pass back data if present (from builder OR parser)
     };
 }
 
