@@ -141,6 +141,37 @@ const ResumeBuilder: React.FC = () => {
     localStorage.setItem('nextstep_resume_data', JSON.stringify(data));
   }, [data]);
 
+  // Re-read localStorage on mount to handle imported resumes
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('nextstep_resume_data');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Only update if the data looks different (e.g., from import)
+        if (parsed.fullName && parsed.fullName !== data.fullName) {
+          const migratedExperience = (parsed.experience || []).map((exp: any) => ({
+            ...exp,
+            location: exp.location || '',
+            bullets: exp.bullets || (exp.description ? exp.description.split('\n').filter((l: string) => l.trim()) : [''])
+          }));
+          const migratedLanguages = Array.isArray(parsed.languages) && parsed.languages.length > 0 && typeof parsed.languages[0] === 'object'
+            ? parsed.languages
+            : typeof parsed.languages === 'string'
+              ? parsed.languages.split(',').map((l: string, i: number) => ({ id: Date.now() + i, name: l.trim(), level: 'Conversational' }))
+              : [];
+          const migratedCertifications = Array.isArray(parsed.certifications)
+            ? parsed.certifications
+            : typeof parsed.certifications === 'string' && parsed.certifications.length > 0
+              ? [{ id: Date.now(), name: parsed.certifications, issuer: '', date: '' }]
+              : [];
+
+          setData({ ...clone(INITIAL_DATA), ...parsed, experience: migratedExperience, languages: migratedLanguages, certifications: migratedCertifications });
+        }
+      }
+    } catch (e) { console.error("Failed to re-read localStorage:", e); }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
+
   useEffect(() => {
     const handleResize = () => {
       if (isAutoFit && previewRef.current) {
