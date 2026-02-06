@@ -93,6 +93,46 @@ function extractMetadata(text: string): ResumeData | null {
     }
     return null;
 }
+const EMAIL_REGEX = /[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}/;
+const PHONE_REGEX = /(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{4}/;
+const LINKEDIN_REGEX = /linkedin\.com\/in\/[a-zA-Z0-9_-]+/;
+
+/**
+ * Heuristic Parser for Raw Text (Best Effort)
+ */
+function parseResumeFromText(text: string): ResumeData {
+    const emailMatch = text.match(EMAIL_REGEX);
+    const phoneMatch = text.match(PHONE_REGEX);
+    const linkedinMatch = text.match(LINKEDIN_REGEX);
+
+    // Skill extraction
+    const foundSkills = COMMON_SKILLS.filter(skill =>
+        text.toLowerCase().includes(skill.toLowerCase())
+    );
+
+    // Naive split for experience/education (very rough)
+    // We mainly want to capture contact info and skills to save user time
+
+    return {
+        // @ts-ignore
+        source: 'parser',
+        fullName: "Imported User", // Hard to extract name reliably without NLP
+        email: emailMatch ? emailMatch[0] : "",
+        phone: phoneMatch ? phoneMatch[0] : "",
+        location: "",
+        website: "",
+        linkedin: linkedinMatch ? linkedinMatch[0] : "",
+        targetRole: "Professional",
+        summary: "Imported from PDF. Please review your details.",
+        experience: [], // Leave empty for user to fill
+        education: [],
+        hardSkills: foundSkills.join(", "),
+        softSkills: "",
+        certifications: [],
+        languages: []
+    };
+}
+
 /**
  * Main Entry Point: Calculate ATS Score
  * Can accept raw text OR structured ResumeData
@@ -113,6 +153,9 @@ export function calculateATSScore(
         if (metadata) {
             data = metadata;
             isBuilder = true;
+        } else {
+            // Fallback: Parse raw text so we can offer "Improve" feature
+            data = parseResumeFromText(input);
         }
     } else {
         data = input;
