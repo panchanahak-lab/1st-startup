@@ -326,6 +326,14 @@ const ResumeBuilder: React.FC = () => {
         </div>
       </header>
 
+      {/* Professional Summary - shows imported PDF text */}
+      {data.summary && (
+        <section className="mb-8">
+          <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-4 tracking-widest">Professional Summary</h3>
+          <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-line">{data.summary}</p>
+        </section>
+      )}
+
       <section className="mb-8">
         <h3 className="text-[10pt] font-black uppercase border-b border-slate-900 pb-1 mb-6 tracking-widest">Experience</h3>
         {data.experience?.map(exp => (
@@ -411,6 +419,16 @@ const ResumeBuilder: React.FC = () => {
         </div>
       </div>
       <div className="w-[68%] p-16">
+        {/* Professional Summary - shows imported PDF text */}
+        {data.summary && (
+          <section className="mb-12">
+            <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-6 flex items-center gap-4">
+              <span className="w-8 h-[2px] bg-brand-500"></span> Summary
+            </h3>
+            <p className="text-[13px] text-slate-600 leading-relaxed whitespace-pre-line">{data.summary}</p>
+          </section>
+        )}
+
         <section className="mb-16">
           <h3 className="text-[11px] font-black uppercase tracking-[0.4em] text-slate-300 mb-10 flex items-center gap-4">
             <span className="w-8 h-[2px] bg-brand-500"></span> Experience

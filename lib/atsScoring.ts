@@ -133,32 +133,30 @@ function parseResumeFromText(text: string): ResumeData {
         ? text.substring(0, 2000) + "... (truncated, please review and edit)"
         : text;
 
-    // Try to extract a generic experience entry
+    // Try to extract a generic experience entry with correct field names
     const experience: any[] = [];
     const expMatch = text.match(/experience|work history|employment/i);
     if (expMatch) {
         experience.push({
             id: Date.now(),
-            title: "Role (Please Edit)",
+            role: "Role (Please Edit)",
             company: "Company (Please Edit)",
             location: "",
-            startDate: "",
-            endDate: "Present",
+            date: "Present",
             bullets: ["Review your original PDF and add your experience details here."]
         });
     }
 
-    // Try to extract a generic education entry
+    // Try to extract a generic education entry with correct field names
     const education: any[] = [];
     const eduMatch = text.match(/education|university|college|degree|bachelor|master/i);
     if (eduMatch) {
         education.push({
             id: Date.now() + 1,
-            institution: "Institution (Please Edit)",
             degree: "Degree (Please Edit)",
-            field: "",
-            graduationDate: "",
-            gpa: ""
+            school: "Institution (Please Edit)",
+            year: "",
+            grade: ""
         });
     }
 
