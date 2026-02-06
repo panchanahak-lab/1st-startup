@@ -137,7 +137,14 @@ const ResumeBuilder: React.FC = () => {
   const [viewMode, setViewMode] = useState<'editor' | 'preview'>('editor'); // For mobile
   const location = useLocation();
 
+  const isFirstRender = useRef(true);
+
+  // Write to localStorage on data change (skip first render to avoid overwriting imported data)
   useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     localStorage.setItem('nextstep_resume_data', JSON.stringify(data));
   }, [data]);
 
@@ -147,8 +154,10 @@ const ResumeBuilder: React.FC = () => {
       const saved = localStorage.getItem('nextstep_resume_data');
       if (saved) {
         const parsed = JSON.parse(saved);
-        // Only update if the data looks different (e.g., from import)
-        if (parsed.fullName && parsed.fullName !== data.fullName) {
+        // Check if this is imported data (has 'source' field from parser/builder)
+        // @ts-ignore
+        if (parsed.source === 'parser' || (parsed.source === 'builder' && parsed.fullName !== data.fullName)) {
+          console.log("Import detected, loading data:", parsed.fullName);
           const migratedExperience = (parsed.experience || []).map((exp: any) => ({
             ...exp,
             location: exp.location || '',
