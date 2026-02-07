@@ -440,13 +440,14 @@ IMPORTANT:
       resetStateMachine();
       setErrorDetail({
         type: 'TIMEOUT',
-        message: "Initialization timed out. Check microphone permissions or network.",
+        message: "Initialization timed out. Network or API is slow. Please try again.",
         action: startInterviewFlow
       });
-    }, 15000); // 15s timeout
+    }, 60000); // 60s timeout (Increased for Translation Latency)
 
     try {
       transitionTo('INITIALIZING');
+      setLiveAiText('Accessing microphone...');
 
       // Request microphone
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true }).catch(err => {
@@ -469,6 +470,7 @@ IMPORTANT:
       source.connect(analyser);
 
       // Create interview session
+      setLiveAiText('Creating interview session...');
       let interviewSession = createInterviewSession({
         jobRole,
         language,
@@ -481,7 +483,7 @@ IMPORTANT:
       const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
       if (apiKey) {
         try {
-          setLiveAiText('Preparing your interviewer...');
+          setLiveAiText(`Personalizing for ${jobRole}...`);
           const proQuestion = await generateProOpeningQuestion({
             jobRole,
             persona,
@@ -499,7 +501,7 @@ IMPORTANT:
 
       // Translate if needed (ONE-TIME call)
       if (language !== 'English') {
-        setLiveAiText(`Translating interview to ${language}...`);
+        setLiveAiText(`Translating interview to ${language} (this may take 20s)...`);
         interviewSession = await translateSession(interviewSession);
       }
 
