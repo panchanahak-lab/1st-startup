@@ -212,6 +212,32 @@ You do not summarize answers.
 You ask one natural follow-up question.
 You speak casually, like a recruiter.`;
 
+// Helper for raw v1 access to bypass SDK v1beta defaults
+async function callGeminiV1Fallback(apiKey: string, prompt: string, modelName: string = 'gemini-pro'): Promise<string> {
+    const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature: 0.7,
+                topP: 0.9,
+                maxOutputTokens: 150
+            }
+        })
+    });
+
+    if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Raw API v1 failed: ${response.status} ${err}`);
+    }
+
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
+
 /**
  * Generate opening question using Gemini Pro (ONE TIME per interview)
  * Sets tone, personality, and realism for the entire session
@@ -223,39 +249,39 @@ You speak casually, like a recruiter.`;
 export async function generateProOpeningQuestion(config: {
     jobRole: string;
     persona: string;
-    language: string;
-    cvSummary?: string;
+    cvSummary: string;
     apiKey: string;
+    language: string;
 }): Promise<string> {
     const genAI = new GoogleGenerativeAI(config.apiKey);
-    // List of models to try in order of preference
-    const modelsToTry = [
+
+    // SDK models (v1beta)
+    const sdkModels = [
         'gemini-1.5-pro-001',
-        'gemini-1.5-pro-latest',
-        'gemini-pro',
-        'gemini-1.5-flash-001'
+        'gemini-1.5-pro-latest'
     ];
 
+    // Raw fallback models (v1)
+    const rawModels = ['gemini-pro', 'gemini-1.0-pro'];
+
     let lastError;
-    for (const modelName of modelsToTry) {
+
+    // 1. Try SDK (v1beta)
+    for (const modelName of sdkModels) {
         try {
-            console.log(`[HYBRID] Attempting opening with model: ${modelName}`);
+            console.log(`[HYBRID] Attempting opening with SDK model: ${modelName}`);
             const model = genAI.getGenerativeModel({
                 model: modelName,
-                generationConfig: {
-                    temperature: 0.7,
-                    topP: 0.9,
-                    maxOutputTokens: 150,
-                }
+                generationConfig: { temperature: 0.7, topP: 0.9, maxOutputTokens: 150 }
             });
 
+            // Prompt construction (same as before)
             const styleGuide = config.persona === 'stress'
                 ? 'Direct and challenging, gets straight to the point'
                 : config.persona === 'mentor'
                     ? 'Warm, encouraging, puts candidate at ease'
                     : 'Professional but friendly, conversational';
 
-            // Include language instruction for non-English
             const languageInstruction = config.language !== 'English'
                 ? `LANGUAGE: You MUST respond entirely in ${config.language}. Do NOT use English.\n\n`
                 : '';
@@ -277,12 +303,47 @@ Rules:
             const result = await model.generateContent(prompt);
             return result.response.text().trim();
         } catch (e: any) {
-            console.warn(`[HYBRID] Model ${modelName} failed:`, e.message);
+            console.warn(`[HYBRID] SDK Model ${modelName} failed:`, e.message);
             lastError = e;
-            // Continue to next model
         }
     }
 
-    // If all failed, throw the last error to trigger fallback
-    throw lastError || new Error("All models failed");
+    // 2. Try Raw Fetch (v1) - The Prompt must be reconstructed locally here or shared
+    // To share the prompt logic, I'll duplicate it briefly for safety or refactor if needed.
+    // Given the tool limitations, duplication is safer to ensure it works NOW.
+
+    const styleGuide = config.persona === 'stress'
+        ? 'Direct and challenging, gets straight to the point'
+        : config.persona === 'mentor'
+            ? 'Warm, encouraging, puts candidate at ease'
+            : 'Professional but friendly, conversational';
+
+    const languageInstruction = config.language !== 'English'
+        ? `LANGUAGE: You MUST respond entirely in ${config.language}. Do NOT use English.\n\n`
+        : '';
+
+    const fullPrompt = `${languageInstruction}${PERSONA_ANCHOR}
+
+Generate ONE opening interview question for a ${config.jobRole} role.
+${config.cvSummary ? `Brief context from resume: ${config.cvSummary.substring(0, 200)}` : ''}
+
+Style: ${styleGuide}
+
+Rules:
+- Ask only ONE question
+- Keep under 30 words`;
+    // Simplified prompt for fallback to avoid complexity
+
+    for (const modelName of rawModels) {
+        try {
+            console.log(`[HYBRID] Attempting opening with RAW v1 model: ${modelName}`);
+            return await callGeminiV1Fallback(config.apiKey, fullPrompt, modelName);
+        } catch (e: any) {
+            console.warn(`[HYBRID] Raw Model ${modelName} failed:`, e.message);
+            lastError = e;
+        }
+    }
+
+    // If all failed, throw
+    throw lastError || new Error("All models (SDK and Raw) failed");
 }

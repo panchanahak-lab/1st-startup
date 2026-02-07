@@ -361,6 +361,45 @@ IMPORTANT:
       }
     }
 
+    // Fallback to Raw V1 if SDK failed
+    try {
+      console.log('[TRANSLATION] Attempting with RAW v1 model: gemini-pro');
+      const greetingCode = getOpeningGreeting({ jobRole, language, persona });
+      const questionsText = session.questions.map((q, i) => `${i + 1}. ${q.question}`).join('\n');
+
+      const prompt = `Translate these interview questions to ${language}.
+Return a JSON object with this EXACT structure:
+{
+  "greeting": "translated greeting text here",
+  "questions": ["translated Q1", "translated Q2", ...]
+}
+
+Original Greeting: "${greetingCode}"
+
+Questions:
+${questionsText}
+
+IMPORTANT:
+- Keep the tone ${personaString}
+- Return ONLY valid JSON
+- Do not include markdown code blocks`;
+
+      const rawText = await callGeminiV1Fallback(apiKey, prompt, 'gemini-pro');
+      const text = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+      const translation = JSON.parse(text);
+
+      if (translation.questions && Array.isArray(translation.questions)) {
+        console.log('[TRANSLATION] Success (Raw V1)! Translated', translation.questions.length, 'questions');
+        return {
+          ...session,
+          translatedGreeting: translation.greeting,
+          translatedQuestions: translation.questions
+        };
+      }
+    } catch (e: any) {
+      console.warn(`[TRANSLATION] Raw V1 failed:`, e.message);
+    }
+
     console.error("[TRANSLATION] All models failed. Falling back to English.");
     return session;
   };
@@ -756,6 +795,35 @@ Keep it encouraging but honest.`;
             break; // Success
           } catch (e: any) {
             console.warn(`[FEEDBACK] Model ${modelName} failed:`, e.message);
+          }
+        }
+
+        // Fallback to Raw V1 if SDK failed
+        if (!aiData) {
+          try {
+            console.log('[FEEDBACK] Attempting with RAW v1 model: gemini-pro');
+            // Use persona anchor for consistent natural tone
+            const prompt = `${PERSONA_ANCHOR}
+
+Evaluate this interview concisely.
+
+ROLE: ${session.jobRole}
+SCORE: ${ruleScore.percentage}%
+
+ANSWERS (summarized):
+${session.answers.slice(0, 3).map((a, i) => `Q${i + 1}: ${a.substring(0, 200)}...`).join('\n')}
+
+Provide:
+1. A 2-sentence summary of their performance
+2. One specific actionable tip
+3. Rating (0-5)
+
+Output JSON: { "summary": "...", "tip": "...", "rating": 5 }`;
+
+            const rawText = await callGeminiV1Fallback(apiKey, prompt, 'gemini-pro');
+            aiData = JSON.parse(rawText.replace(/```json/g, '').replace(/```/g, '').trim());
+          } catch (e: any) {
+            console.warn(`[FEEDBACK] Raw V1 failed:`, e.message);
           }
         }
 
@@ -1258,5 +1326,31 @@ Keep it encouraging but honest.`;
     </section>
   );
 };
+
+// Helper for raw v1 access to bypass SDK v1beta defaults
+async function callGeminiV1Fallback(apiKey: string, prompt: string, modelName: string = 'gemini-pro'): Promise<string> {
+  const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
+
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.7,
+        topP: 0.9,
+        maxOutputTokens: 300
+      }
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`Raw API v1 failed: ${response.status} ${err}`);
+  }
+
+  const data = await response.json();
+  return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+}
 
 export default LiveInterview;
