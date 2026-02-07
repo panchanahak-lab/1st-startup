@@ -341,6 +341,7 @@ Return ONLY a JSON object with this format:
         return session;
       }
 
+      console.log('[TRANSLATION] Success! Translated', translation.questions.length, 'questions to', language);
       return {
         ...session,
         translatedGreeting: translation.greeting,
@@ -348,7 +349,7 @@ Return ONLY a JSON object with this format:
       };
 
     } catch (e) {
-      console.error("Translation failed:", e);
+      console.error("[TRANSLATION] Failed:", e);
       return session; // Fallback to English
     }
   };
@@ -508,7 +509,9 @@ Return ONLY a JSON object with this format:
     }
 
     // Get translated text if available
-    let questionText = session.translatedQuestions?.[session.currentIndex] || question.question;
+    const translatedQ = session.translatedQuestions?.[session.currentIndex];
+    let questionText = translatedQ || question.question;
+    console.log('[QUESTION]', session.currentIndex, 'translated:', !!translatedQ, 'text:', questionText.substring(0, 50));
 
     // Apply natural formatting ONLY for English to avoid weird prefixes in other langs
     if (language === 'English') {

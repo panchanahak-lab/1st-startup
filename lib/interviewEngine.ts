@@ -245,10 +245,10 @@ export async function generateProOpeningQuestion(config: {
 
     // Include language instruction for non-English
     const languageInstruction = config.language !== 'English'
-        ? `\n\nIMPORTANT: Generate the question in ${config.language} language.`
+        ? `LANGUAGE: You MUST respond entirely in ${config.language}. Do NOT use English.\n\n`
         : '';
 
-    const prompt = `${PERSONA_ANCHOR}
+    const prompt = `${languageInstruction}${PERSONA_ANCHOR}
 
 Generate ONE opening interview question for a ${config.jobRole} role.
 ${config.cvSummary ? `Brief context from resume: ${config.cvSummary.substring(0, 200)}` : ''}
@@ -260,9 +260,9 @@ Rules:
 - Avoid formal phrases like "Tell me about yourself" or "Walk me through your resume"
 - Sound like a real recruiter starting a conversation
 - Keep under 30 words
-- Use natural language: "What got you into...", "I noticed...", "So you've been..."${languageInstruction}`;
+- Use natural language: "What got you into...", "I noticed...", "So you've been..."`;
 
-    console.log('[HYBRID] Using Gemini Pro for opening question');
+    console.log('[HYBRID] Using Gemini Pro for opening question, language:', config.language);
     const result = await model.generateContent(prompt);
     return result.response.text().trim();
 }
