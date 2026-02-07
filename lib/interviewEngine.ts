@@ -255,14 +255,14 @@ export async function generateProOpeningQuestion(config: {
 }): Promise<string> {
     const genAI = new GoogleGenerativeAI(config.apiKey);
 
-    // SDK models (v1beta)
+    // SDK models (v1beta) - 2026 Compatible
     const sdkModels = [
-        'gemini-1.5-pro-001',
-        'gemini-1.5-pro-latest'
+        'gemini-2.5-pro',
+        'gemini-2.5-flash'
     ];
 
     // Raw fallback models (v1)
-    const rawModels = ['gemini-pro', 'gemini-1.0-pro'];
+    const rawModels = ['gemini-2.5-pro', 'gemini-pro-latest'];
 
     let lastError;
 

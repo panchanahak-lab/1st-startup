@@ -309,7 +309,7 @@ const LiveInterview: React.FC = () => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) return session;
 
-    const modelsToTry = ['gemini-1.5-flash-001', 'gemini-1.5-flash-latest', 'gemini-pro'];
+    const modelsToTry = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro'];
     const personaString = RECRUITER_PERSONALITIES[persona].name;
 
     for (const modelName of modelsToTry) {
@@ -363,7 +363,7 @@ IMPORTANT:
 
     // Fallback to Raw V1 if SDK failed
     try {
-      console.log('[TRANSLATION] Attempting with RAW v1 model: gemini-pro');
+      console.log('[TRANSLATION] Attempting with RAW v1 model: gemini-2.5-flash');
       const greetingCode = getOpeningGreeting({ jobRole, language, persona });
       const questionsText = session.questions.map((q, i) => `${i + 1}. ${q.question}`).join('\n');
 
@@ -384,7 +384,7 @@ IMPORTANT:
 - Return ONLY valid JSON
 - Do not include markdown code blocks`;
 
-      const rawText = await callGeminiV1Fallback(apiKey, prompt, 'gemini-pro');
+      const rawText = await callGeminiV1Fallback(apiKey, prompt, 'gemini-2.5-flash');
       const text = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
       const translation = JSON.parse(text);
 
@@ -749,7 +749,7 @@ IMPORTANT:
       let aiTip = ruleScore.improvements[0] || 'Keep practicing!';
 
       if (apiKey) {
-        const modelsToTry = ['gemini-1.5-flash-001', 'gemini-1.5-flash-latest', 'gemini-pro'];
+        const modelsToTry = ['gemini-2.5-flash', 'gemini-flash-latest', 'gemini-2.5-pro'];
         let aiData = null;
 
         for (const modelName of modelsToTry) {
@@ -801,7 +801,7 @@ Keep it encouraging but honest.`;
         // Fallback to Raw V1 if SDK failed
         if (!aiData) {
           try {
-            console.log('[FEEDBACK] Attempting with RAW v1 model: gemini-pro');
+            console.log('[FEEDBACK] Attempting with RAW v1 model: gemini-2.5-flash');
             // Use persona anchor for consistent natural tone
             const prompt = `${PERSONA_ANCHOR}
 
@@ -820,12 +820,14 @@ Provide:
 
 Output JSON: { "summary": "...", "tip": "...", "rating": 5 }`;
 
-            const rawText = await callGeminiV1Fallback(apiKey, prompt, 'gemini-pro');
+            const rawText = await callGeminiV1Fallback(apiKey, prompt, 'gemini-2.5-flash');
             aiData = JSON.parse(rawText.replace(/```json/g, '').replace(/```/g, '').trim());
           } catch (e: any) {
             console.warn(`[FEEDBACK] Raw V1 failed:`, e.message);
           }
         }
+
+
 
         if (aiData) {
           aiSummary = aiData.summary;
@@ -1328,8 +1330,13 @@ Output JSON: { "summary": "...", "tip": "...", "rating": 5 }`;
 };
 
 // Helper for raw v1 access to bypass SDK v1beta defaults
-async function callGeminiV1Fallback(apiKey: string, prompt: string, modelName: string = 'gemini-pro'): Promise<string> {
-  const url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
+async function callGeminiV1Fallback(apiKey: string, prompt: string, modelName: string = 'gemini-2.5-flash'): Promise<string> {
+  // Try v1beta first as 2.5 is likely beta
+  let url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+  if (modelName.includes('pro-latest')) {
+    url = `https://generativelanguage.googleapis.com/v1/models/${modelName}:generateContent?key=${apiKey}`;
+  }
 
   const response = await fetch(url, {
     method: 'POST',
