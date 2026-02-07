@@ -229,7 +229,7 @@ export async function generateProOpeningQuestion(config: {
 }): Promise<string> {
     const genAI = new GoogleGenerativeAI(config.apiKey);
     const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-pro',
+        model: 'gemini-1.5-pro-001',
         generationConfig: {
             temperature: 0.7,  // Natural variation, not scripted
             topP: 0.9,
