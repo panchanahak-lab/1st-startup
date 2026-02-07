@@ -223,6 +223,7 @@ You speak casually, like a recruiter.`;
 export async function generateProOpeningQuestion(config: {
     jobRole: string;
     persona: string;
+    language: string;
     cvSummary?: string;
     apiKey: string;
 }): Promise<string> {
@@ -242,6 +243,11 @@ export async function generateProOpeningQuestion(config: {
             ? 'Warm, encouraging, puts candidate at ease'
             : 'Professional but friendly, conversational';
 
+    // Include language instruction for non-English
+    const languageInstruction = config.language !== 'English'
+        ? `\n\nIMPORTANT: Generate the question in ${config.language} language.`
+        : '';
+
     const prompt = `${PERSONA_ANCHOR}
 
 Generate ONE opening interview question for a ${config.jobRole} role.
@@ -254,7 +260,7 @@ Rules:
 - Avoid formal phrases like "Tell me about yourself" or "Walk me through your resume"
 - Sound like a real recruiter starting a conversation
 - Keep under 30 words
-- Use natural language: "What got you into...", "I noticed...", "So you've been..."`;
+- Use natural language: "What got you into...", "I noticed...", "So you've been..."${languageInstruction}`;
 
     console.log('[HYBRID] Using Gemini Pro for opening question');
     const result = await model.generateContent(prompt);

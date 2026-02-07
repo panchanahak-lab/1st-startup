@@ -434,6 +434,7 @@ Return ONLY a JSON object with this format:
           const proQuestion = await generateProOpeningQuestion({
             jobRole,
             persona,
+            language,
             cvSummary: resumeContext,
             apiKey
           });
