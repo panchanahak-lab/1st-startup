@@ -919,7 +919,7 @@ Keep it encouraging but honest.`;
                   onClick={() => fileInputRef.current?.click()}
                   className={`border-2 border-dashed rounded-2xl p-8 text-center cursor-pointer ${resumeFile ? 'border-brand-500 bg-brand-500/5' : 'border-white/10 hover:border-brand-500/50'}`}
                 >
-                  <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.txt" onChange={e => e.target.files && parseResume(e.target.files[0])} />
+                  <input ref={fileInputRef} type="file" className="hidden" accept=".pdf,.doc,.docx,.txt" onChange={e => { e.stopPropagation(); e.target.files && parseResume(e.target.files[0]); }} />
                   <div className="text-3xl mb-4 text-brand-500"><i className={`fas ${resumeFile ? 'fa-file-check' : 'fa-file-upload'}`}></i></div>
                   <p className="text-sm font-bold">{resumeFile ? resumeFile.name : "Upload for tailored questions"}</p>
                 </div>
