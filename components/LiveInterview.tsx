@@ -11,7 +11,9 @@ import {
   isInterviewComplete,
   getOpeningGreeting,
   formatQuestionNaturally,
-  buildFeedbackPrompt
+  buildFeedbackPrompt,
+  generateProOpeningQuestion,
+  PERSONA_ANCHOR
 } from '../lib/interviewEngine';
 import {
   useInterviewState,
@@ -424,6 +426,25 @@ Return ONLY a JSON object with this format:
         questionCount: 5
       });
 
+      // HYBRID MODEL: Generate Pro opening question (ONE TIME per interview)
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+      if (apiKey) {
+        try {
+          setLiveAiText('Preparing your interviewer...');
+          const proQuestion = await generateProOpeningQuestion({
+            jobRole,
+            persona,
+            cvSummary: resumeContext,
+            apiKey
+          });
+          interviewSession.proOpeningQuestion = proQuestion;
+          interviewSession.usedProForOpening = true;
+        } catch (e) {
+          console.warn('[HYBRID] Pro opening failed, using static question:', e);
+          // Graceful fallback - session will use static questions
+        }
+      }
+
       // Translate if needed (ONE-TIME call)
       if (language !== 'English') {
         setLiveAiText(`Translating interview to ${language}...`);
@@ -467,6 +488,17 @@ Return ONLY a JSON object with this format:
   const askCurrentQuestion = async () => {
     const session = interviewSessionRef.current;
     if (!session) return;
+
+    // HYBRID MODEL: Use Pro-generated opening for first question if available
+    if (session.currentIndex === 0 && session.proOpeningQuestion && session.usedProForOpening) {
+      const openingText = session.proOpeningQuestion;
+      setLiveAiText(openingText);
+      setTranscripts(prev => [...prev, { role: 'ai', text: openingText, timestamp: Date.now() }]);
+      await speakTextAsync(openingText);
+      transitionTo('LISTENING');
+      startListening();
+      return;
+    }
 
     const question = getCurrentQuestion(session);
     if (!question) {
@@ -669,6 +701,8 @@ Return ONLY a JSON object with this format:
             model: 'gemini-2.5-flash',
             generationConfig: {
               responseMimeType: "application/json",
+              temperature: 0.7,  // Natural variation, not scripted
+              topP: 0.9,
               responseSchema: {
                 type: SchemaType.OBJECT,
                 properties: {
@@ -680,7 +714,10 @@ Return ONLY a JSON object with this format:
             }
           });
 
-          const prompt = `You are evaluating an interview. Be concise.
+          // Use persona anchor for consistent natural tone
+          const prompt = `${PERSONA_ANCHOR}
+
+Evaluate this interview concisely.
 
 ROLE: ${session.jobRole}
 SCORE: ${ruleScore.percentage}%

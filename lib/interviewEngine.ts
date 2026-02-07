@@ -1,7 +1,9 @@
 // Interview Engine - Human-Like Interview Logic
 // Decouples transcription from AI, uses static questions, adds natural delays
+// Supports HYBRID MODEL ROUTING: Gemini Pro for opening, Flash for rest
 
 import { getQuestionsForInterview, detectRoleType, detectLevel, InterviewQuestion } from './questionBanks';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export type InterviewStage = 'setup' | 'initializing' | 'asking' | 'listening' | 'thinking' | 'processing_feedback' | 'feedback';
 
@@ -14,6 +16,9 @@ export interface InterviewSession {
     language: string;
     persona: string;
     startTime: number;
+    // Hybrid model routing: Pro for opening, Flash for rest
+    usedProForOpening: boolean;
+    proOpeningQuestion?: string;
     translatedQuestions?: string[];
     translatedGreeting?: string;
 }
@@ -57,7 +62,8 @@ export function createInterviewSession(config: InterviewConfig): InterviewSessio
         jobRole: config.jobRole,
         language: config.language,
         persona: config.persona,
-        startTime: Date.now()
+        startTime: Date.now(),
+        usedProForOpening: false  // Will be set to true when Pro generates opening
     };
 }
 
@@ -196,3 +202,62 @@ Provide honest, constructive feedback in JSON format with:
 - suggestions (2-3 actionable tips)
 - idealResponseTip (one specific tip for their weakest answer)`;
 }
+
+/**
+ * PERSONA ANCHOR - Kept under 60 tokens for cost efficiency
+ * Used in all Gemini prompts for consistent interviewer personality
+ */
+export const PERSONA_ANCHOR = `You are a real human interviewer.
+You do not summarize answers.
+You ask one natural follow-up question.
+You speak casually, like a recruiter.`;
+
+/**
+ * Generate opening question using Gemini Pro (ONE TIME per interview)
+ * Sets tone, personality, and realism for the entire session
+ * 
+ * HYBRID MODEL ROUTING:
+ * - Pro: Opening question only (temperature 0.7 for natural speech)
+ * - Flash: All follow-ups and feedback
+ */
+export async function generateProOpeningQuestion(config: {
+    jobRole: string;
+    persona: string;
+    cvSummary?: string;
+    apiKey: string;
+}): Promise<string> {
+    const genAI = new GoogleGenerativeAI(config.apiKey);
+    const model = genAI.getGenerativeModel({
+        model: 'gemini-1.5-pro',
+        generationConfig: {
+            temperature: 0.7,  // Natural variation, not scripted
+            topP: 0.9,
+            maxOutputTokens: 150,
+        }
+    });
+
+    const styleGuide = config.persona === 'stress'
+        ? 'Direct and challenging, gets straight to the point'
+        : config.persona === 'mentor'
+            ? 'Warm, encouraging, puts candidate at ease'
+            : 'Professional but friendly, conversational';
+
+    const prompt = `${PERSONA_ANCHOR}
+
+Generate ONE opening interview question for a ${config.jobRole} role.
+${config.cvSummary ? `Brief context from resume: ${config.cvSummary.substring(0, 200)}` : ''}
+
+Style: ${styleGuide}
+
+Rules:
+- Ask only ONE question
+- Avoid formal phrases like "Tell me about yourself" or "Walk me through your resume"
+- Sound like a real recruiter starting a conversation
+- Keep under 30 words
+- Use natural language: "What got you into...", "I noticed...", "So you've been..."`;
+
+    console.log('[HYBRID] Using Gemini Pro for opening question');
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
+}
+
