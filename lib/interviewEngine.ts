@@ -228,27 +228,39 @@ export async function generateProOpeningQuestion(config: {
     apiKey: string;
 }): Promise<string> {
     const genAI = new GoogleGenerativeAI(config.apiKey);
-    const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-pro-001',
-        generationConfig: {
-            temperature: 0.7,  // Natural variation, not scripted
-            topP: 0.9,
-            maxOutputTokens: 150,
-        }
-    });
+    // List of models to try in order of preference
+    const modelsToTry = [
+        'gemini-1.5-pro-001',
+        'gemini-1.5-pro-latest',
+        'gemini-pro',
+        'gemini-1.5-flash-001'
+    ];
 
-    const styleGuide = config.persona === 'stress'
-        ? 'Direct and challenging, gets straight to the point'
-        : config.persona === 'mentor'
-            ? 'Warm, encouraging, puts candidate at ease'
-            : 'Professional but friendly, conversational';
+    let lastError;
+    for (const modelName of modelsToTry) {
+        try {
+            console.log(`[HYBRID] Attempting opening with model: ${modelName}`);
+            const model = genAI.getGenerativeModel({
+                model: modelName,
+                generationConfig: {
+                    temperature: 0.7,
+                    topP: 0.9,
+                    maxOutputTokens: 150,
+                }
+            });
 
-    // Include language instruction for non-English
-    const languageInstruction = config.language !== 'English'
-        ? `LANGUAGE: You MUST respond entirely in ${config.language}. Do NOT use English.\n\n`
-        : '';
+            const styleGuide = config.persona === 'stress'
+                ? 'Direct and challenging, gets straight to the point'
+                : config.persona === 'mentor'
+                    ? 'Warm, encouraging, puts candidate at ease'
+                    : 'Professional but friendly, conversational';
 
-    const prompt = `${languageInstruction}${PERSONA_ANCHOR}
+            // Include language instruction for non-English
+            const languageInstruction = config.language !== 'English'
+                ? `LANGUAGE: You MUST respond entirely in ${config.language}. Do NOT use English.\n\n`
+                : '';
+
+            const prompt = `${languageInstruction}${PERSONA_ANCHOR}
 
 Generate ONE opening interview question for a ${config.jobRole} role.
 ${config.cvSummary ? `Brief context from resume: ${config.cvSummary.substring(0, 200)}` : ''}
@@ -262,8 +274,15 @@ Rules:
 - Keep under 30 words
 - Use natural language: "What got you into...", "I noticed...", "So you've been..."`;
 
-    console.log('[HYBRID] Using Gemini Pro for opening question, language:', config.language);
-    const result = await model.generateContent(prompt);
-    return result.response.text().trim();
-}
+            const result = await model.generateContent(prompt);
+            return result.response.text().trim();
+        } catch (e: any) {
+            console.warn(`[HYBRID] Model ${modelName} failed:`, e.message);
+            lastError = e;
+            // Continue to next model
+        }
+    }
 
+    // If all failed, throw the last error to trigger fallback
+    throw lastError || new Error("All models failed");
+}

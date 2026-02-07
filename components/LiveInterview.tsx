@@ -309,49 +309,60 @@ const LiveInterview: React.FC = () => {
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
     if (!apiKey) return session;
 
-    try {
-      const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-001' });
+    const modelsToTry = ['gemini-1.5-flash-001', 'gemini-1.5-flash-latest', 'gemini-pro'];
+    const personaString = RECRUITER_PERSONALITIES[persona].name;
 
-      const greetingCode = getOpeningGreeting({ jobRole, language, persona });
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`[TRANSLATION] Attempting with model: ${modelName}`);
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: modelName });
 
-      const questionsToTranslate = session.questions.map((q, i) => `${i + 1}. ${q.question}`).join('\n');
-      const prompt = `Translate the following interview content into ${language}.
-Keep the professional tone.
+        const greetingCode = getOpeningGreeting({ jobRole, language, persona });
 
-Greeting: "${greetingCode}"
+        // Force JSON structure for translation
+        const questionsText = session.questions.map((q, i) => `${i + 1}. ${q.question}`).join('\n');
+
+        const prompt = `Translate these interview questions to ${language}.
+Return a JSON object with this EXACT structure:
+{
+  "greeting": "translated greeting text here",
+  "questions": ["translated Q1", "translated Q2", ...]
+}
+
+Original Greeting: "${greetingCode}"
 
 Questions:
-${questionsToTranslate}
+${questionsText}
 
-Return ONLY a JSON object with this format:
-{
-  "greeting": "Translated greeting text",
-  "questions": ["Translated question 1", "Translated question 2", ...]
-}`;
+IMPORTANT:
+- Keep the tone ${personaString}
+- Return ONLY valid JSON
+- Do not include markdown code blocks`;
 
-      const res = await model.generateContent(prompt);
-      const cleanText = res.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
-      const translation = JSON.parse(cleanText);
+        const result = await model.generateContent(prompt);
+        const text = result.response.text().replace(/```json/g, '').replace(/```/g, '').trim();
+        const translation = JSON.parse(text);
 
-      // VALIDATION: Ensure we got the correct number of questions
-      if (!translation.questions || translation.questions.length !== session.questions.length) {
-        console.warn("Translation count mismatch. Falling back to English.", translation.questions?.length, session.questions.length);
-        alert("Translation service returned incomplete data. Falling back to English.");
-        return session;
+        if (!translation.questions || !Array.isArray(translation.questions)) {
+          throw new Error("Invalid translation format");
+        }
+
+        console.log('[TRANSLATION] Success! Translated', translation.questions.length, 'questions to', language);
+        return {
+          ...session,
+          translatedGreeting: translation.greeting,
+          translatedQuestions: translation.questions
+        };
+
+      } catch (e: any) {
+        console.warn(`[TRANSLATION] Model ${modelName} failed:`, e.message);
+        // Continue to next model
       }
-
-      console.log('[TRANSLATION] Success! Translated', translation.questions.length, 'questions to', language);
-      return {
-        ...session,
-        translatedGreeting: translation.greeting,
-        translatedQuestions: translation.questions
-      };
-
-    } catch (e) {
-      console.error("[TRANSLATION] Failed:", e);
-      return session; // Fallback to English
     }
+
+    console.error("[TRANSLATION] All models failed. Falling back to English.");
+    return session;
   };
 
   /**
@@ -699,27 +710,32 @@ Return ONLY a JSON object with this format:
       let aiTip = ruleScore.improvements[0] || 'Keep practicing!';
 
       if (apiKey) {
-        try {
-          const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({
-            model: 'gemini-1.5-flash-001',
-            generationConfig: {
-              responseMimeType: "application/json",
-              temperature: 0.7,  // Natural variation, not scripted
-              topP: 0.9,
-              responseSchema: {
-                type: SchemaType.OBJECT,
-                properties: {
-                  summary: { type: SchemaType.STRING },
-                  tip: { type: SchemaType.STRING }
-                },
-                required: ["summary", "tip"]
-              }
-            }
-          });
+        const modelsToTry = ['gemini-1.5-flash-001', 'gemini-1.5-flash-latest', 'gemini-pro'];
+        let aiData = null;
 
-          // Use persona anchor for consistent natural tone
-          const prompt = `${PERSONA_ANCHOR}
+        for (const modelName of modelsToTry) {
+          try {
+            console.log(`[FEEDBACK] Attempting with model: ${modelName}`);
+            const genAI = new GoogleGenerativeAI(apiKey);
+            const model = genAI.getGenerativeModel({
+              model: modelName,
+              generationConfig: {
+                responseMimeType: "application/json",
+                temperature: 0.7,
+                topP: 0.9,
+                responseSchema: {
+                  type: SchemaType.OBJECT,
+                  properties: {
+                    summary: { type: SchemaType.STRING },
+                    tip: { type: SchemaType.STRING },
+                    rating: { type: SchemaType.INTEGER }
+                  }
+                }
+              }
+            });
+
+            // Use persona anchor for consistent natural tone
+            const prompt = `${PERSONA_ANCHOR}
 
 Evaluate this interview concisely.
 
@@ -735,13 +751,19 @@ Provide:
 
 Keep it encouraging but honest.`;
 
-          const res = await model.generateContent(prompt);
-          const aiData = JSON.parse(res.response.text());
-          aiSummary = aiData.summary || aiSummary;
-          aiTip = aiData.tip || aiTip;
-        } catch (aiErr) {
-          console.error('AI feedback error:', aiErr);
-          // Fall back to rule-based feedback
+            const res = await model.generateContent(prompt);
+            aiData = JSON.parse(res.response.text());
+            break; // Success
+          } catch (e: any) {
+            console.warn(`[FEEDBACK] Model ${modelName} failed:`, e.message);
+          }
+        }
+
+        if (aiData) {
+          aiSummary = aiData.summary;
+          aiTip = aiData.tip;
+        } else {
+          console.error("[FEEDBACK] All models failed. Using rule-based fallback.");
         }
       }
 
