@@ -228,6 +228,7 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
 
                         if (confirm(confirmMsg)) {
                           localStorage.setItem('nextstep_resume_data', JSON.stringify(analysisResult.extractedData));
+                          window.dispatchEvent(new Event('resumeImported'));
                           // If it's a raw import, don't auto-print. User needs to edit first.
                           window.location.href = isRaw ? '/#builder' : '/?autoprint=true#builder';
                         }
