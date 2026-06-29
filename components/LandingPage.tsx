@@ -12,8 +12,7 @@ import AuthModal from './AuthModal';
 import ATSChecker from './ATSChecker';
 import LiveInterview from './LiveInterview';
 import ResumeBuilder from './ResumeBuilder';
-import LinkedInOptimizer from './LinkedInOptimizer';
-import ChatBot from './ChatBot';
+
 
 import DesktopRecommendation from './DesktopRecommendation';
 
@@ -86,7 +85,7 @@ const LandingPage: React.FC = () => {
                 <About />
                 <ATSChecker isLoggedIn={!!user} onOpenAuth={openAuth} />
                 <ResumeBuilder />
-                <LinkedInOptimizer />
+
                 <LiveInterview />
                 <WhyChooseUs />
                 <Services />
@@ -95,7 +94,7 @@ const LandingPage: React.FC = () => {
             </main>
             <DesktopRecommendation />
 
-            <ChatBot />
+
             <BackToTop />
             <Footer />
             <AuthModal

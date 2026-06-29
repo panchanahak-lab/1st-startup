@@ -31,26 +31,13 @@ const TOUR_STEPS: TourStep[] = [
     narration: "Our Interactive CV Engine uses real-time neural enhancement to transform your achievements into high-impact signals.",
     position: 'top'
   },
-  {
-    targetId: 'linkedin-optimizer',
-    title: 'LinkedIn Branding',
-    content: "Transform your profile into a recruiter magnet. We analyze both your text and your profile screenshots.",
-    narration: "Maximize your digital presence. Our Branding Engine analyzes your LinkedIn visuals and copy to attract premium opportunities.",
-    position: 'top'
-  },
+
   {
     targetId: 'interview',
     title: 'The Simulation',
     content: "Practice high-stakes interviews with native-audio AI agents. Get immediate diagnostic scores on your performance.",
     narration: "Enter the simulation. Practice high-stakes interviews with our native audio agents and receive a full diagnostic score.",
     position: 'top'
-  },
-  {
-    targetId: 'chatbot-trigger',
-    title: 'The Career Architect',
-    content: "Your 24/7 strategist. Ask for negotiation tips, mock prep, or resume summaries anytime.",
-    narration: "I am always here for you. Ask me anything about your career strategy, salary negotiations, or prep, anytime.",
-    position: 'left'
   }
 ];
 
