@@ -174,14 +174,49 @@ function parseResumeFromText(text: string): ResumeData {
     // Construct experience
     const experience: any[] = [];
     if (experienceLines.length > 0) {
-        experience.push({
-            id: Date.now(),
-            role: "Role (Please Edit)",
-            company: "Company (Please Edit)",
-            location: "",
-            date: "Present",
-            bullets: experienceLines.join(' ').split(/(?<=[.!?])\s+/).filter(b => b.trim().length > 0) // Try to split by sentences
-        });
+        let currentExp: any = null;
+        const dateRegex = /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?[a-z]*\s*\d{0,2},?\s*20\d{2}\s*[-–to]+\s*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?[a-z]*\s*\d{0,2},?\s*20\d{2}|Present|\d{4}\s*[-–to]+\s*\d{4}|\d{2}\s*[a-zA-Z]+\s*[-–to]+\s*[a-zA-Z]*\s*\d{4}|\d{1,2}\s*[a-zA-Z]+\s*[-–to]+\s*Present)/i;
+        
+        for (let line of experienceLines) {
+            const isHeader = dateRegex.test(line) && line.length < 150;
+            if (isHeader || currentExp === null) {
+                if (currentExp) {
+                    experience.push(currentExp);
+                }
+                
+                let company = "Company (Please Edit)";
+                let role = "Role (Please Edit)";
+                let date = "Present";
+                
+                const dateMatch = line.match(dateRegex);
+                if (dateMatch) {
+                    date = dateMatch[0];
+                    line = line.replace(dateMatch[0], '').trim();
+                }
+                
+                const parts = line.split(/\s*[-–|]\s*/);
+                if (parts.length >= 2) {
+                    company = parts[0].trim() || company;
+                    role = parts.slice(1).join(" ").trim() || role;
+                } else if (line.trim().length > 0) {
+                    role = line.trim();
+                }
+                
+                currentExp = {
+                    id: Date.now() + experience.length,
+                    role: role.substring(0, 100),
+                    company: company.substring(0, 100),
+                    location: "",
+                    date: date.substring(0, 50),
+                    bullets: []
+                };
+            } else {
+                if (line.trim().length > 0) {
+                    currentExp.bullets.push(line.trim());
+                }
+            }
+        }
+        if (currentExp) experience.push(currentExp);
     } else {
         const expMatch = text.match(/experience|work history|employment/i);
         if (expMatch) {
@@ -199,13 +234,43 @@ function parseResumeFromText(text: string): ResumeData {
     // Construct education
     const education: any[] = [];
     if (educationLines.length > 0) {
-        education.push({
-            id: Date.now() + 1,
-            degree: "Degree (Please Edit)",
-            school: educationLines.join(' ').substring(0, 100), // First part as school to hold the text
-            year: "",
-            grade: ""
-        });
+        let currentEdu: any = null;
+        for (let line of educationLines) {
+             const isHeader = /(20\d{2}|19\d{2}|degree|bachelor|master|phd|diploma|b\.e|b\.tech|m\.tech|b\.sc|b\.a)/i.test(line) && line.length < 150;
+             if (isHeader || currentEdu === null) {
+                 if (currentEdu) education.push(currentEdu);
+                 
+                 let degree = "Degree (Please Edit)";
+                 let school = "Institution (Please Edit)";
+                 let year = "";
+                 
+                 const yearMatch = line.match(/(20\d{2}|19\d{2})/);
+                 if (yearMatch) {
+                     year = yearMatch[0];
+                 }
+                 
+                 const parts = line.split(/\s*[-–|,]\s*/);
+                 if (parts.length >= 2) {
+                     degree = parts[0].trim() || degree;
+                     school = parts.slice(1).join(" ").trim() || school;
+                 } else if (line.trim().length > 0) {
+                     degree = line.trim();
+                 }
+                 
+                 currentEdu = {
+                     id: Date.now() + education.length + 100,
+                     degree: degree.substring(0, 100),
+                     school: school.substring(0, 100),
+                     year: year,
+                     grade: ""
+                 };
+             } else {
+                 if (currentEdu.school === "Institution (Please Edit)" && line.trim().length > 0) {
+                     currentEdu.school = line.substring(0, 100);
+                 }
+             }
+        }
+        if (currentEdu) education.push(currentEdu);
     } else {
         const eduMatch = text.match(/education|university|college|degree|bachelor|master/i);
         if (eduMatch) {
