@@ -58,8 +58,18 @@ const ATSChecker: React.FC<ATSCheckerProps> = ({ isLoggedIn, onOpenAuth }) => {
       for (let i = 1; i <= pdf.numPages; i++) {
         const page = await pdf.getPage(i);
         const textContent = await page.getTextContent();
-        const pageText = textContent.items.map((item: any) => item.str).join(' ');
-        fullText += pageText + '\n';
+        let pageText = '';
+        let lastY = -1;
+        for (const item of textContent.items) {
+          if (lastY !== -1 && Math.abs((item as any).transform[5] - lastY) > 5) {
+            pageText += '\n';
+          } else if (lastY !== -1) {
+            pageText += ' ';
+          }
+          pageText += (item as any).str;
+          lastY = (item as any).transform[5];
+        }
+        fullText += pageText + '\n\n';
       }
 
       console.log("Extracted Text Length:", fullText.length);

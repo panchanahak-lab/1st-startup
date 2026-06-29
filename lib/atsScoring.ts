@@ -110,15 +110,20 @@ function parseResumeFromText(text: string): ResumeData {
 
     // Try to extract name from first non-empty line that doesn't look like contact info
     let fullName = "Imported User";
-    for (const line of lines.slice(0, 5)) {
-        // Skip lines that look like email, phone, or URL
-        if (EMAIL_REGEX.test(line) || PHONE_REGEX.test(line) || /https?:\/\//.test(line) || /linkedin/i.test(line)) {
+    for (const line of lines.slice(0, 10)) {
+        // Skip lines that look like email, phone, URL, or common header words
+        if (EMAIL_REGEX.test(line) || PHONE_REGEX.test(line) || /https?:\/\//.test(line) || /linkedin/i.test(line) || /resume|curriculum vitae|cv|mobile|email|address/i.test(line)) {
             continue;
         }
         // Name is likely short (2-4 words) and contains mostly letters
         const words = line.split(/\s+/);
         if (words.length >= 2 && words.length <= 5 && /^[A-Za-z\s'-]+$/.test(line)) {
-            fullName = line;
+            // Found a reasonable name candidate
+            fullName = line
+                .toLowerCase()
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
             break;
         }
     }
@@ -128,37 +133,93 @@ function parseResumeFromText(text: string): ResumeData {
         text.toLowerCase().includes(skill.toLowerCase())
     );
 
-    // Put full text in summary so user can see and reorganize
-    const summaryText = text.length > 2000
-        ? text.substring(0, 2000) + "... (truncated, please review and edit)"
-        : text;
+    // Partition the text into logical sections
+    let currentSection = 'summary';
+    const summaryLines: string[] = [];
+    const experienceLines: string[] = [];
+    const educationLines: string[] = [];
+    const skillsLines: string[] = [];
 
-    // Try to extract a generic experience entry with correct field names
+    const isSectionHeader = (line: string): string | null => {
+        const lower = line.toLowerCase().replace(/[^a-z\s]/g, '').trim();
+        if (lower === 'experience' || lower === 'professional experience' || lower === 'work experience' || lower === 'employment history' || lower === 'work history') return 'experience';
+        if (lower === 'education' || lower === 'educational qualification' || lower === 'academic background' || lower === 'academics') return 'education';
+        if (lower === 'skills' || lower === 'technical skills' || lower === 'skills and strengths' || lower === 'core competencies') return 'skills';
+        if (lower === 'projects' || lower === 'personal projects') return 'experience'; // Group projects into experience for now
+        return null;
+    };
+
+    for (const line of lines) {
+        // Ignore the name line if it's identical
+        if (line.toLowerCase() === fullName.toLowerCase()) continue;
+        
+        const newSection = isSectionHeader(line);
+        if (newSection) {
+            currentSection = newSection;
+            continue; // skip the header line itself
+        }
+
+        if (currentSection === 'summary') summaryLines.push(line);
+        else if (currentSection === 'experience') experienceLines.push(line);
+        else if (currentSection === 'education') educationLines.push(line);
+        else if (currentSection === 'skills') skillsLines.push(line);
+    }
+
+    // Clean up summary
+    let finalSummary = summaryLines.join(' ');
+    // Remove contact info from summary if it leaked in
+    finalSummary = finalSummary.replace(EMAIL_REGEX, '').replace(PHONE_REGEX, '').trim();
+    if (finalSummary.length > 2000) finalSummary = finalSummary.substring(0, 2000) + "... (truncated)";
+
+    // Construct experience
     const experience: any[] = [];
-    const expMatch = text.match(/experience|work history|employment/i);
-    if (expMatch) {
+    if (experienceLines.length > 0) {
         experience.push({
             id: Date.now(),
             role: "Role (Please Edit)",
             company: "Company (Please Edit)",
             location: "",
             date: "Present",
-            bullets: ["Review your original PDF and add your experience details here."]
+            bullets: experienceLines.join(' ').split(/(?<=[.!?])\s+/).filter(b => b.trim().length > 0) // Try to split by sentences
         });
+    } else {
+        const expMatch = text.match(/experience|work history|employment/i);
+        if (expMatch) {
+            experience.push({
+                id: Date.now(),
+                role: "Role (Please Edit)",
+                company: "Company (Please Edit)",
+                location: "",
+                date: "Present",
+                bullets: ["Review your original PDF and add your experience details here."]
+            });
+        }
     }
 
-    // Try to extract a generic education entry with correct field names
+    // Construct education
     const education: any[] = [];
-    const eduMatch = text.match(/education|university|college|degree|bachelor|master/i);
-    if (eduMatch) {
+    if (educationLines.length > 0) {
         education.push({
             id: Date.now() + 1,
             degree: "Degree (Please Edit)",
-            school: "Institution (Please Edit)",
+            school: educationLines.join(' ').substring(0, 100), // First part as school to hold the text
             year: "",
             grade: ""
         });
+    } else {
+        const eduMatch = text.match(/education|university|college|degree|bachelor|master/i);
+        if (eduMatch) {
+            education.push({
+                id: Date.now() + 1,
+                degree: "Degree (Please Edit)",
+                school: "Institution (Please Edit)",
+                year: "",
+                grade: ""
+            });
+        }
     }
+
+    const allSkills = new Set([...foundSkills, ...skillsLines.join(' ').split(/[,|•]+/).map(s => s.trim()).filter(s => s.length > 0)]);
 
     return {
         // @ts-ignore
@@ -170,10 +231,10 @@ function parseResumeFromText(text: string): ResumeData {
         website: "",
         linkedin: linkedinMatch ? linkedinMatch[0] : "",
         targetRole: "Professional",
-        summary: summaryText,
+        summary: finalSummary,
         experience,
         education,
-        hardSkills: foundSkills.join(", "),
+        hardSkills: Array.from(allSkills).join(", "),
         softSkills: "",
         certifications: [],
         languages: []
