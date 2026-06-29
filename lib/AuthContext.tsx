@@ -18,34 +18,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-    }).catch((error) => {
-      console.warn("Auth session check failed (non-critical):", error);
-    }).finally(() => {
-      setLoading(false);
-    });
+    // Mock user session to bypass login
+    const mockUser: User = {
+      id: 'mock-user-123',
+      app_metadata: {},
+      user_metadata: {},
+      aud: 'authenticated',
+      created_at: new Date().toISOString(),
+      email: 'mockuser@example.com',
+    } as User;
 
-    // Listen for changes on auth state (logged in, signed out, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    const mockSession: Session = {
+      access_token: 'mock-token',
+      refresh_token: 'mock-refresh',
+      expires_in: 3600,
+      token_type: 'bearer',
+      user: mockUser,
+    } as Session;
 
-      if (event === 'SIGNED_IN' && session?.user) {
-        // Initialize free credits for new users
-        await supabase
-          .from("subscriptions")
-          .upsert({
-            user_id: session.user.id,
-            ai_credits: 5
-          }, { onConflict: 'user_id', ignoreDuplicates: true });
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    setSession(mockSession);
+    setUser(mockUser);
+    setLoading(false);
   }, []);
 
   const signOut = async () => {
