@@ -169,13 +169,20 @@ function parseResumeFromText(text: string): ResumeData {
     let finalSummary = summaryLines.join(' ');
     // Remove contact info from summary if it leaked in
     finalSummary = finalSummary.replace(EMAIL_REGEX, '').replace(PHONE_REGEX, '').trim();
+    
+    // Iteratively remove common artifact labels from the beginning of the summary
+    for (let i = 0; i < 3; i++) {
+        finalSummary = finalSummary.replace(/^(Mobile|Email|Phone|Contact|Address|CAREER OBJECTIVE|PROFESSIONAL SUMMARY|SUMMARY|OBJECTIVE)[\s:|.-]*/gi, '').trim();
+        if (finalSummary.startsWith('|')) finalSummary = finalSummary.substring(1).trim();
+    }
+    
     if (finalSummary.length > 2000) finalSummary = finalSummary.substring(0, 2000) + "... (truncated)";
 
     // Construct experience
     const experience: any[] = [];
     if (experienceLines.length > 0) {
         let currentExp: any = null;
-        const dateRegex = /((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?[a-z]*\s*\d{0,2},?\s*20\d{2}\s*[-–to]+\s*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)?[a-z]*\s*\d{0,2},?\s*20\d{2}|Present|\d{4}\s*[-–to]+\s*\d{4}|\d{2}\s*[a-zA-Z]+\s*[-–to]+\s*[a-zA-Z]*\s*\d{4}|\d{1,2}\s*[a-zA-Z]+\s*[-–to]+\s*Present)/i;
+        const dateRegex = /((?:(?:\d{1,2}\s*)?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*(?:\d{2,4})?)\s*[-–to]+\s*(?:(?:\d{1,2}\s*)?(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s*(?:\d{2,4})?|Present)|\d{4}\s*[-–to]+\s*(?:\d{4}|Present))/i;
         
         for (let line of experienceLines) {
             const isHeader = dateRegex.test(line) && line.length < 150;
